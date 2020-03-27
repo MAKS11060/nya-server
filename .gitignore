@@ -1,0 +1,7 @@
+.*
+
+# files
+!.gitignore
+
+# folders
+node_modules

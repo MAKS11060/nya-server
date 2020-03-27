@@ -1,0 +1,23 @@
+{
+  "name": "nya-server",
+  "version": "0.6.1",
+  "description": "",
+  "keywords": [
+    "server",
+    "backend",
+    "https",
+    "http2",
+    "http",
+    "wss"
+  ],
+  "main": "index.js",
+  "author": "maks11060 <maks11060@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "bytes": "^3.1.0",
+    "mime": "^2.4.4",
+    "ms": "^2.1.2",
+    "regexparam": "^1.3.0",
+    "ws": "^7.2.3"
+  }
+}
