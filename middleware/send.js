@@ -11,14 +11,15 @@ const { Readable } = require('stream')
 	}
 })*/
 
+const toBuffer = (data, cb) => Buffer.from(cb(data))
+
 
 module.exports = ctx => {
-	const {
-		socket,
-		stream,
-	} = ctx
+	const {	socket,	stream } = ctx
+	let isRespond = 0
 
 	const respond = headers => {
+		if (isRespond++) return
 		if (ctx.req.httpVersionMajor === 2) {
 			ctx.stream.respond({
 				...ctx.header,
@@ -35,24 +36,22 @@ module.exports = ctx => {
 		}
 	}
 
-	const write = (c) => {
-		// if (!stream.writable) return false
-	
-		// if (ctx.req.httpVersionMajor === 2) {
-		// 	ctx.respond()
-		// 	ctx.req.stream.write(data)
-		// } else {
-
-		// }
+	const write = data => {
+		if (!socket.writable) return false
+		ctx.respond()
+		if (ctx.req.httpVersionMajor === 2) {
+			stream.write(data)
+		} else {
+			ctx.res.write(data)
+		}
 	}
 
 	const end = (data = '') => {
 		if (!socket.writable) return false
+		ctx.respond()
 		if (ctx.req.httpVersionMajor === 2) {
-			ctx.respond()
 			stream.end(data)
 		} else {
-			ctx.respond()
 			ctx.res.end(data)
 		}
 	}
@@ -68,26 +67,24 @@ module.exports = ctx => {
 	}
 
 	const send = (data, ...args) => {
-		// const ctx = ctx
-		// if (Buffer.isBuffer(data)) {
-		// 	ctx.size(data.byteLength)
-		// 	ctx.pipe(createStream(data))
-		// } else if (typeof data === 'object') {
-		// 	data = Buffer.from(JSON.stringify(data, ...args))
-		// 	ctx.type('json')
-		// 	ctx.size(data.byteLength)
-		// 	ctx.pipe(createStream(data))
-		// } else if (typeof data === 'string') {
-		// 	data = Buffer.from(data)
-		// 	ctx.size(data.byteLength)
-		// 	ctx.pipe(createStream(data))
-		// } else if (typeof data === 'number' || typeof data === 'boolean') {
-		// 	data = Buffer.from(String(data))
-		// 	ctx.size(data.byteLength)
-		// 	ctx.pipe(createStream(data))
-		// } else if (typeof data === 'undefined') {
-		// 	ctx.end()
-		// }
+		switch (typeof data) {
+			case 'string': data = Buffer.from(data); break
+			case 'object':
+				if (Buffer.isBuffer(data)) break
+				data = Buffer.from(JSON.stringify(data, ...args))
+				ctx.type('json')
+				break
+			case 'function':
+				const d = data(...args)
+				console.log(typeof d, d)
+				return ctx.send(d)
+			case 'boolean':
+			case 'number':
+			case 'bigint': data = Buffer.from(String(data)); break
+			default: data = Buffer.from('')
+		}
+		ctx.size(data.byteLength)
+		ctx.end(data)
 	}
 
 
@@ -96,6 +93,6 @@ module.exports = ctx => {
 		write: {enumerable: true, writable: false, configurable: false, value: write},
 		end: {enumerable: true, writable: false, configurable: false, value: end},
 		send: {enumerable: true, writable: false, configurable: false, value: send},
-		pipe: {enumerable: true, writable: false, configurable: false, value: pipe},
+		//pipe: {enumerable: true, writable: false, configurable: false, value: pipe},
 	})
 }
