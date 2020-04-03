@@ -13,6 +13,9 @@
   "main": "index.js",
   "author": "maks11060 <maks11060@gmail.com>",
   "license": "MIT",
+  "scripts": {
+    "release": "np --no-2fa"
+  },
   "repository": "https://github.com/maks11060/nya-server",
   "dependencies": {
     "bytes": "^3.1.0",

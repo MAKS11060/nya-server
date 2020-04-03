@@ -1,3 +1,5 @@
-'use strict'
+"use strict";
 
-module.exports = require('./lib/application')
+const app = require('./lib')
+
+module.exports = app()
