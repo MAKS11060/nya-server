@@ -1,11 +1,8 @@
 'use strict'
 
 module.exports = ctx => {
-	const { req } = ctx
-	// const { httpVersionMajor } = req
-
 	Object.defineProperties(ctx, {
-		headers: {enumerable: true, writable: false, configurable: false, value: req.headers},
+		headers: {enumerable: true, writable: false, configurable: false, value: ctx.req.headers},
 	})
 
 	ctx.header = new Proxy({}, {
