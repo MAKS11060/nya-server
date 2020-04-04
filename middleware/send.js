@@ -1,21 +1,7 @@
 'use strict'
 
-// const is = require('is-stream')
-const { Readable } = require('stream')
-
-
-/*const createStream = buffer => new Readable({
-	read: function(size) {
-		this.push(buffer)
-		this.push(null)
-	}
-})*/
-
-const toBuffer = (data, cb) => Buffer.from(cb(data))
-
-
 module.exports = ctx => {
-	const {	socket,	stream } = ctx
+	const {	socket,	stream, res: {writableEnded}} = ctx
 	let isRespond = 0
 
 	const respond = headers => {
@@ -26,18 +12,16 @@ module.exports = ctx => {
 				...headers,
 			})
 		} else {
-			const status = ctx.header['status']
-			status ? delete ctx.header['status'] : null
-
+			const {status, ...oth} = ctx.header
 			ctx.res.writeHead(status || 200, {
-				...ctx.header,
+				...oth,
 				...headers,
 			})
 		}
 	}
 
 	const write = data => {
-		if (!socket.writable) return false
+		if (!socket.writable || ctx.res.writableEnded) return false
 		ctx.respond()
 		if (ctx.req.httpVersionMajor === 2) {
 			stream.write(data)
@@ -47,23 +31,13 @@ module.exports = ctx => {
 	}
 
 	const end = (data = '') => {
-		if (!socket.writable) return false
+		if (!socket.writable || ctx.res.writableEnded) return false
 		ctx.respond()
 		if (ctx.req.httpVersionMajor === 2) {
 			stream.end(data)
 		} else {
 			ctx.res.end(data)
 		}
-	}
-
-	const pipe = src => {
-		// ctx.isPipe = true
-		// if (is.readable(src)) {
-		// 	ctx.respond()
-		// 	src.pipe(ctx.stream)
-		// } else {
-		// 	throw new Error('is not a stream')
-		// }
 	}
 
 	const send = (data, ...args) => {
@@ -86,8 +60,18 @@ module.exports = ctx => {
 		ctx.size(data.byteLength)
 		ctx.end(data)
 	}
-
-
+	
+	const pipe = src => {
+		// ctx.isPipe = true
+		// if (is.readable(src)) {
+		// 	ctx.respond()
+		// 	src.pipe(ctx.stream)
+		// } else {
+		// 	throw new Error('is not a stream')
+		// }
+	}
+	
+	
 	Object.defineProperties(ctx, {
 		respond: {enumerable: true, writable: false, configurable: false, value: respond},
 		write: {enumerable: true, writable: false, configurable: false, value: write},
