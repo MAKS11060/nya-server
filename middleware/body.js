@@ -39,7 +39,7 @@ const pretter = ({headers: {'content-type': type}}) => {
 }
 
 module.exports = props => {
-	const PAYLOAD = bytes(props.payload ? props.payload : '4mb')
+	const PAYLOAD = bytes(props.payload ? props.payload : '8mb')
 
 	return ctx => {
 		const { method, headers: {
@@ -55,7 +55,7 @@ module.exports = props => {
 				let isResolve = false
 				const data = chunk => {
 					cSize += chunk.byteLength
-					if (limit.payload < cSize) {
+					if (cSize > PAYLOAD) {
 						reject(new Error(`Payload Limit: ${bytes(PAYLOAD)}`))
 					} else buf.push(chunk)
 					
