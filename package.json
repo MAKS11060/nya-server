@@ -10,7 +10,11 @@
     "http",
     "wss"
   ],
-  "main": "index.js",
+  "main": "./index.js",
+  "exports": {
+    "import": "./wrapper.mjs",
+    "require": "./index.js"
+  },
   "author": "maks11060 <maks11060@gmail.com>",
   "license": "MIT",
   "repository": "https://github.com/maks11060/nya-server",
