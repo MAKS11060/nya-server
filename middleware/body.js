@@ -1,7 +1,5 @@
-'use strict'
-
-const qs = require('querystring')
-const bytes = require('bytes')
+import qs from 'querystring'
+import bytes from 'bytes'
 
 const isEmpty = method => ['GET', 'HEAD', 'OPTIONS'].includes(method)
 const pretter = ({headers: {'content-type': type}}) => {
@@ -38,14 +36,18 @@ const pretter = ({headers: {'content-type': type}}) => {
 	return data => data
 }
 
-module.exports = props => {
-	const PAYLOAD = bytes(props.payload ? props.payload : '8mb')
-
+export default (options) => {
+	options = Object.assign({
+		payload: '10mb'
+	}, options)
+	
+	const PAYLOAD = bytes(options.payload)
+	
 	return ctx => {
-		const { method, headers: {
+		const {method, headers: {
 			'content-length': size = 0,
 			'content-type': type,
-		}, stream, socket } = ctx
+		}, socket: {stream}} = ctx
 		
 		const body = new Promise((resolve, reject) => {
 			if (isEmpty(method)) resolve(null)
@@ -89,10 +91,18 @@ module.exports = props => {
 			if (data) return pretter(ctx)(data)
 			else return null
 		})
+		.catch(err => err)
 		
 		Object.defineProperties(ctx, {
-			body: {enumerable: true, writable: false, configurable: false, value: body},
+			body: {
+				enumerable: true,
+				get() {
+					return body.then(data => { // if not get value, hide parser error
+						if (data instanceof Error) throw data
+						else return data
+					})
+				}
+			},
 		})
-		
 	}
 }
