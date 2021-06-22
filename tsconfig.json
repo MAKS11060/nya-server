@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "target": "ESNext",
+    "moduleResolution": "Node",
+    "allowSyntheticDefaultImports": true,
+    "noEmitOnError": true,
+    "declaration": true,
+    "declarationDir": "./types",
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}
