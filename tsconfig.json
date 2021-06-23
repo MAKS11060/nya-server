@@ -6,9 +6,10 @@
     "allowSyntheticDefaultImports": true,
     "noEmitOnError": true,
     "declaration": true,
-    "declarationDir": "./types",
+    "declarationDir": "./types"
   },
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "types/**"
   ]
 }
