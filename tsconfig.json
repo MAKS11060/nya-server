@@ -7,11 +7,15 @@
     "target": "ESNext",
     "moduleResolution": "Node",
     "allowSyntheticDefaultImports": true,
+    "removeComments": true,
     "noEmitOnError": true,
     "declaration": true,
     "declarationDir": "./types",
-    "outDir": "./dist"
+    "outDir": "./dist",
   },
+  "include": [
+    "src/**/*"
+  ],
   "exclude": [
     "node_modules",
     "types/**"
