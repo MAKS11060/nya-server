@@ -50,7 +50,7 @@ export interface IContext extends IUserContext {
 
 	mimeType(filename: string): this
 
-	send(data?: string | Buffer | undefined | null): void
+	send(data?: string | Buffer | undefined | null, autoClose?: boolean): void
 
 	html(data?: string | Buffer): void
 
