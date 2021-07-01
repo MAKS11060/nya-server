@@ -171,13 +171,14 @@ export class Context implements IContext {
 	}
 
 	send(data?: string | Buffer | null | undefined, autoClose?: boolean) {
-		this._isSend = (!autoClose && this.autoClose)
+		if (autoClose) this.autoClose = autoClose
 
 		data = typeof data === 'string' ?
 			Buffer.from(data) : Buffer.isBuffer(data) ?
 				data : Buffer.from('')
 
-		this.header[constants.HTTP2_HEADER_CONTENT_LENGTH] = data.byteLength
+		if (!this.stream.headersSent)
+			this.header[constants.HTTP2_HEADER_CONTENT_LENGTH] = data.byteLength
 
 		if (this.stream.writable && !this.piped) {
 			if (!this.stream.headersSent) this.respond()
@@ -185,7 +186,8 @@ export class Context implements IContext {
 			if (this.statusCode === 204 || this.statusCode === 304)
 				return this.stream.end()
 
-			if (!autoClose && this.autoClose) this.stream.end(data)
+			if (this.autoClose)
+				this.stream.end(data)
 			else this.stream.write(data)
 		}
 
@@ -195,6 +197,8 @@ export class Context implements IContext {
 			this.stream.end()
 			return
 		}
+		this._isSend = true
+
 	}
 
 	html(data: string | Buffer | undefined): void {
