@@ -171,7 +171,7 @@ export class Context implements IContext {
 	}
 
 	send(data?: string | Buffer | null | undefined, autoClose?: boolean) {
-		if (autoClose) this.autoClose = autoClose
+		if (typeof autoClose !== undefined) this.autoClose = autoClose
 
 		data = typeof data === 'string' ?
 			Buffer.from(data) : Buffer.isBuffer(data) ?
