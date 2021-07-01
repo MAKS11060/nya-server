@@ -33,6 +33,7 @@ export interface IContext extends IUserContext {
 
 	header: OutgoingHttpHeaders
 	statusCode: number
+	autoClose: boolean
 
 	readonly body: Body
 	piped: boolean
@@ -70,6 +71,7 @@ export class Context implements IContext {
 
 	_piped: boolean = false
 	_statusCode: number = 200
+	_autoClose: boolean = true
 
 	private _body: Body
 	private _cookie: Cookie
@@ -116,8 +118,16 @@ export class Context implements IContext {
 		return this._piped
 	}
 
-	get statusCode() {
+	get statusCode(): number {
 		return this._statusCode
+	}
+
+	get autoClose(): boolean {
+		return this._autoClose
+	}
+
+	set autoClose(v) {
+		this._autoClose = v
 	}
 
 	static create(stream: ServerHttp2Stream, headers: IncomingHttpHeaders): IContext {

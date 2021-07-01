@@ -61,7 +61,7 @@ export class ServerHTTP2 {
 		this.server.on('stream', async (stream, headers) => {
 			const context = Context.create(stream, headers)
 			await app.handler.run(context)
-			context.send()
+			if (context.autoClose) context.send()
 		})
 
 		return app
