@@ -108,10 +108,9 @@ export default class Router implements IRouter {
 				}
 
 				for (const route of Router.find(this, ctx.method, ctx.url.pathname)) {
-					// if (ctx.stream.writable || ctx.method === 'HEAD') {
-						ctx.params = route.params
-						ctx.next = await route.handler(ctx) || undefined
-					// }
+					if (ctx.isSend) return
+					ctx.params = route.params
+					ctx.next = await route.handler(ctx) || undefined
 				}
 			} catch (e) {
 				throw e

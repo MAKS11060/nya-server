@@ -34,6 +34,7 @@ export interface IContext extends IUserContext {
 	header: OutgoingHttpHeaders
 	statusCode: number
 	autoClose: boolean
+	isSend: boolean
 
 	readonly body: Body
 	piped: boolean
@@ -69,13 +70,6 @@ export class Context implements IContext {
 
 	header: OutgoingHttpHeaders = {}
 
-	_piped: boolean = false
-	_statusCode: number = 200
-	_autoClose: boolean = true
-
-	private _body: Body
-	private _cookie: Cookie
-
 	constructor(stream: ServerHttp2Stream, headers: IncomingHttpHeaders) {
 		this.stream = stream
 		this.headers = headers
@@ -90,16 +84,49 @@ export class Context implements IContext {
 		this._cookie = Cookie.create(this)
 	}
 
-	get cookie(): Cookie {
-		return this._cookie
+	_piped: boolean = false
+
+	get piped(): boolean {
+		return this._piped
 	}
-	get cookies(): Map<string, string> {
-		return this._cookie.cookies
+
+	_statusCode: number = 200
+
+	get statusCode(): number {
+		return this._statusCode
 	}
+
+	_autoClose: boolean = true
+
+	get autoClose(): boolean {
+		return this._autoClose
+	}
+
+	set autoClose(v) {
+		this._autoClose = v
+	}
+
+	private _isSend: boolean = false
+
+	get isSend(): boolean {
+		return this._isSend
+	}
+
+	private _body: Body
 
 	get body(): Body {
 		if (this._body) return this._body
 		return this._body = Body.create(this, '10mb')
+	}
+
+	private _cookie: Cookie
+
+	get cookie(): Cookie {
+		return this._cookie
+	}
+
+	get cookies(): Map<string, string> {
+		return this._cookie.cookies
 	}
 
 	get method(): string {
@@ -112,22 +139,6 @@ export class Context implements IContext {
 
 	get query(): URLSearchParams {
 		return this.url.searchParams
-	}
-
-	get piped(): boolean {
-		return this._piped
-	}
-
-	get statusCode(): number {
-		return this._statusCode
-	}
-
-	get autoClose(): boolean {
-		return this._autoClose
-	}
-
-	set autoClose(v) {
-		this._autoClose = v
 	}
 
 	static create(stream: ServerHttp2Stream, headers: IncomingHttpHeaders): IContext {
@@ -159,20 +170,23 @@ export class Context implements IContext {
 		return this
 	}
 
-	send(data?: string | Buffer | null | undefined) {
-		if (typeof data === 'string' || Buffer.isBuffer(data))
-			data = Buffer.from(data)
-		else data = Buffer.from('')
+	send(data?: string | Buffer | null | undefined, autoClose?: boolean) {
+		this._isSend = (!autoClose && this.autoClose)
+
+		data = typeof data === 'string' ?
+			Buffer.from(data) : Buffer.isBuffer(data) ?
+				data : Buffer.from('')
 
 		this.header[constants.HTTP2_HEADER_CONTENT_LENGTH] = data.byteLength
+
 		if (this.stream.writable && !this.piped) {
-			this.respond()
+			if (!this.stream.headersSent) this.respond()
 
 			if (this.statusCode === 204 || this.statusCode === 304)
 				return this.stream.end()
 
-			this.stream.end(data)
-			return
+			if (!autoClose || this.autoClose) this.stream.end(data)
+			else this.stream.write(data)
 		}
 
 		// ?? Ok
