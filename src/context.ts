@@ -170,8 +170,8 @@ export class Context implements IContext {
 		return this
 	}
 
-	send(data?: string | Buffer | null | undefined, autoClose?: boolean) {
-		if (typeof autoClose !== undefined) this.autoClose = autoClose
+	send(data?: string | Buffer | null | undefined, holdStream?: boolean) {
+		this._isSend = true
 
 		data = typeof data === 'string' ?
 			Buffer.from(data) : Buffer.isBuffer(data) ?
@@ -186,9 +186,12 @@ export class Context implements IContext {
 			if (this.statusCode === 204 || this.statusCode === 304)
 				return this.stream.end()
 
-			if (this.autoClose)
+			if (!holdStream)
 				this.stream.end(data)
-			else this.stream.write(data)
+			else {
+				this.stream.write(data)
+				this._autoClose = false
+			}
 		}
 
 		// ?? Ok
@@ -197,8 +200,6 @@ export class Context implements IContext {
 			this.stream.end()
 			return
 		}
-		this._isSend = true
-
 	}
 
 	html(data: string | Buffer | undefined): void {
@@ -206,7 +207,7 @@ export class Context implements IContext {
 		this.send(data)
 	}
 
-	json(data: object, replacer: ((this: any, key: string, value: any) => any) | undefined, space: string | number | undefined): void {
+	json(data: object, replacer?: ((this: any, key: string, value: any) => any) | undefined, space?: string | number | undefined): void {
 		this.type('application/json')
 		this.send(Buffer.from(JSON.stringify(data, replacer, space)))
 	}
