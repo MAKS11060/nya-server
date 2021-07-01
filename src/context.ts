@@ -186,7 +186,7 @@ export class Context implements IContext {
 			if (this.statusCode === 204 || this.statusCode === 304)
 				return this.stream.end()
 
-			if (!holdStream)
+			if (!holdStream && this.autoClose)
 				this.stream.end(data)
 			else {
 				this.stream.write(data)
