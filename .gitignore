@@ -76,3 +76,6 @@ web_modules/
 # IntelliJ project files
 .idea
 *.iml
+
+dist
+types
