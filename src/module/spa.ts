@@ -1,30 +1,51 @@
 import path from 'path'
 import {promises as fs} from 'fs'
+import {Context} from '../context.js'
+import {TypedEmitter} from 'tiny-typed-emitter'
 
 type Options = {
 	index: string
 	root?: string
 }
 
-export const CreateSPA = (opts: Options = {index: 'dist/index.html'}): (pathname: string) => Promise<{ data?: string | Buffer, file?: string, error?: Error }> => {
-	const rootFile = path.relative(path.dirname(path.resolve(opts.index)), path.resolve(opts.index))
-	const rootDir = path.resolve(opts.root || path.dirname(opts.index))
+const EXTENSIONS = [
+	'.html', '.htm', '.css',
+	'.js', '.json',
+	'.png', '.jpg', '.svg', '.webp'
+]
 
-	return async (pathname: string) => {
-		try {
-			if (pathname === '/' || !path.extname(pathname)) pathname = rootFile
+type SPAEvents = {
+	error: (error: Error) => void
+}
 
-			if (path.extname(pathname)) {
-				const filepath = path.join(rootDir, pathname)
-				await fs.access(filepath)
-				return {
-					data: await fs.readFile(filepath),
-					file: filepath
+export class SPA extends TypedEmitter<SPAEvents> {
+	readonly index: string = 'index.html'
+	readonly root: string
+	readonly exts: Set<string>
+
+	constructor(options: { index: string; root?: string; fileExtension?: string[] }) {
+		super()
+		this.index = path.resolve(options.index)
+		this.root = options.root ? path.resolve(options?.root) : path.dirname(this.index)
+		this.exts = new Set(options?.fileExtension || EXTENSIONS)
+	}
+
+	middleware(): (ctx: Context) => void {
+		return async ctx => {
+			try {
+				if (!path.extname(ctx.url.pathname)) {
+					ctx.html(await fs.readFile(this.index))
+				} else {
+					if (this.exts.has(path.extname(ctx.url.pathname))) {
+						const file = path.join(this.root, ctx.url.pathname)
+						ctx.mimeType(file).send(await fs.readFile(file))
+					} else {
+						ctx.status(404).send()
+					}
 				}
-			}
-		} catch (e) {
-			return {
-				error: e
+			} catch (e) {
+				if (this.eventNames().includes('error')) this.emit('error', e)
+				else throw e
 			}
 		}
 	}
