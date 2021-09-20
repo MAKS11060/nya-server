@@ -3,9 +3,8 @@ import {promises as fs} from 'fs'
 import {Context} from '../context.js'
 import {TypedEmitter} from 'tiny-typed-emitter'
 
-type Options = {
-	index: string
-	root?: string
+type SPAEvents = {
+	error: (error: Error) => void
 }
 
 const EXTENSIONS = [
@@ -13,10 +12,6 @@ const EXTENSIONS = [
 	'.js', '.json',
 	'.png', '.jpg', '.svg', '.webp'
 ]
-
-type SPAEvents = {
-	error: (error: Error) => void
-}
 
 export class SPA extends TypedEmitter<SPAEvents> {
 	readonly index: string = 'index.html'
@@ -26,7 +21,7 @@ export class SPA extends TypedEmitter<SPAEvents> {
 	constructor(options: { index: string; root?: string; fileExtension?: string[] }) {
 		super()
 		this.index = path.resolve(options.index)
-		this.root = options.root ? path.resolve(options?.root) : path.dirname(this.index)
+		this.root = options.root ? path.resolve(options.root) : path.dirname(this.index)
 		this.exts = new Set(options?.fileExtension || EXTENSIONS)
 	}
 
