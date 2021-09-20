@@ -54,7 +54,7 @@ class WebSocketClient extends TypedEmitter<WebSocketClientEvents> {
 export class H2Websocket extends TypedEmitter<WebSocketEvents> {
 	readonly clients: Set<WebSocketClient> = new Set
 
-	middleware(options?: { maxPayload?: number; skipUTF8Validation?: number; validateWebSocket?: boolean }): (ctx: Context) => void {
+	middleware(options?: { maxPayload?: number; skipUTF8Validation?: number; validateWebSocket?: boolean }): (ctx: Context) => any {
 		return ctx => {
 			if (options.validateWebSocket) {
 				if (ctx.headers[':protocol'] !== 'websocket') throw new Error('Headers[:protocol] not valid')
