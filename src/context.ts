@@ -70,6 +70,8 @@ export class Context implements IContext {
 
 	header: OutgoingHttpHeaders = {}
 
+	private errors: Error[]
+
 	constructor(stream: ServerHttp2Stream, headers: IncomingHttpHeaders) {
 		this.stream = stream
 		this.headers = headers
@@ -141,7 +143,7 @@ export class Context implements IContext {
 		return this.url.searchParams
 	}
 
-	static create(stream: ServerHttp2Stream, headers: IncomingHttpHeaders): IContext {
+	static create(stream: ServerHttp2Stream, headers: IncomingHttpHeaders): Context {
 		return new this(stream, headers)
 	}
 
@@ -215,5 +217,9 @@ export class Context implements IContext {
 	text(data: string | Buffer | undefined): void {
 		this.type('text/plain; charset=utf-8')
 		this.send(data)
+	}
+
+	error(err: Error) {
+		this.errors.push(err)
 	}
 }

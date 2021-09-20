@@ -1,5 +1,5 @@
 import ms from 'ms'
-import {IContext} from './../context.js'
+import {Context} from './../context.js'
 
 
 // export interface ICookies {
@@ -94,7 +94,7 @@ export interface ICookies {
 export class Cookie implements ICookies {
 	private readonly _cookies
 
-	constructor(ctx: IContext) {
+	constructor(ctx: Context) {
 		this._cookies = ctx.headers.cookie ? new Map(Cookie.parse(ctx.headers.cookie)) : new Map()
 	}
 
@@ -112,7 +112,7 @@ export class Cookie implements ICookies {
 		return this._cookie.size
 	}
 
-	static create(ctx: IContext) {
+	static create(ctx: Context) {
 		return new this(ctx)
 	}
 

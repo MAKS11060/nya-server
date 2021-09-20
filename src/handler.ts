@@ -1,7 +1,7 @@
-import {IContext} from './context.js'
+import {Context} from './context.js'
 
 
-export type Middleware = (ctx: IContext) => void
+export type Middleware = (ctx: Context) => void
 
 export class Handler {
 	private stack: (Middleware)[] = []
@@ -14,7 +14,7 @@ export class Handler {
 		this.stack.push(handler)
 	}
 
-	async run(context: IContext) {
+	async run(context: Context) {
 		for (let handler of this.stack) {
 			await handler(context)
 		}

@@ -5,8 +5,8 @@ import {Servers} from './server.js'
 export {Server} from './server.js'
 export {default as Router} from './components/router.js'
 
-export {H2Websocket} from './components/h2-websocket.js'
-export {CreateSPA} from './module/spa.js'
+export {SPA} from './module/spa.js'
+export {H2Websocket} from './module/h2-websocket.js'
 
 export class App {
 	handler: Handler

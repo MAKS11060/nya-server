@@ -1,4 +1,4 @@
-import {IContext} from '../context.js'
+import {Context} from '../context.js'
 import qs, {ParsedUrlQuery} from 'querystring'
 import bytes from 'bytes'
 
@@ -18,7 +18,7 @@ export class Body implements IBody {
 	private byteLengthLimit: number
 	private readonly body: Promise<Buffer>
 
-	constructor(ctx: IContext, limit: string | number = '10mb') {
+	constructor(ctx: Context, limit: string | number = '10mb') {
 		this.limit = limit
 
 		const {stream, headers: {'content-length': size}} = ctx
@@ -49,7 +49,7 @@ export class Body implements IBody {
 		this.byteLengthLimit = bytes.parse(val)
 	}
 
-	static create(ctx: IContext, limit?: string | number) {
+	static create(ctx: Context, limit?: string | number) {
 		return new this(ctx, limit)
 	}
 

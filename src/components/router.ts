@@ -1,5 +1,5 @@
 import {parse} from 'regexparam'
-import {IContext} from '../context.js'
+import {Context} from '../context.js'
 
 
 const exec = (path: string, result: { keys: string[], pattern: RegExp }): {[key: string]: string | null} => {
@@ -14,11 +14,11 @@ const exec = (path: string, result: { keys: string[], pattern: RegExp }): {[key:
 type IRoute = {
 	uri: string
 	method: string
-	handler: (ctx: IContext) => unknown
+	handler: (ctx: Context) => unknown
 	uriParams?: { keys: string[], pattern: RegExp }
 }
 
-type IMiddleware = (ctx: IContext) => void
+type IMiddleware = (ctx: Context) => void
 
 interface IRouter {
 	store: {
@@ -27,16 +27,16 @@ interface IRouter {
 	}
 
 	use(handler: IMiddleware): this
-	all(uri: string, handler: (ctx: IContext) => unknown): this
-	get(uri: string, handler: (ctx: IContext) => unknown): this
-	put(uri: string, handler: (ctx: IContext) => unknown): this
-	post(uri: string, handler: (ctx: IContext) => unknown): this
-	head(uri: string, handler: (ctx: IContext) => unknown): this
-	trace(uri: string, handler: (ctx: IContext) => unknown): this
-	patch(uri: string, handler: (ctx: IContext) => unknown): this
-	delete(uri: string, handler: (ctx: IContext) => unknown): this
-	options(uri: string, handler: (ctx: IContext) => unknown): this
-	connect(uri: string, handler: (ctx: IContext) => unknown): this
+	all(uri: string, handler: (ctx: Context) => unknown): this
+	get(uri: string, handler: (ctx: Context) => unknown): this
+	put(uri: string, handler: (ctx: Context) => unknown): this
+	post(uri: string, handler: (ctx: Context) => unknown): this
+	head(uri: string, handler: (ctx: Context) => unknown): this
+	trace(uri: string, handler: (ctx: Context) => unknown): this
+	patch(uri: string, handler: (ctx: Context) => unknown): this
+	delete(uri: string, handler: (ctx: Context) => unknown): this
+	options(uri: string, handler: (ctx: Context) => unknown): this
+	connect(uri: string, handler: (ctx: Context) => unknown): this
 }
 
 export default class Router implements IRouter {
@@ -84,7 +84,7 @@ export default class Router implements IRouter {
 	}
 
 	middleware() {
-		return async (ctx: IContext): Promise<void> => {
+		return async (ctx: Context): Promise<void> => {
 			try {
 				for (const handler of this.store.middleware || []) {
 					if (ctx.stream.writable) await handler(ctx)
@@ -106,50 +106,50 @@ export default class Router implements IRouter {
 		return this
 	}
 
-	all(uri: string, handler: (ctx: IContext) => unknown) {
+	all(uri: string, handler: (ctx: Context) => unknown) {
 		Router.createRoute(this, {uri, method: '*', handler})
 		return this
 	}
 
-	get(uri: string, handler: (ctx: IContext) => unknown) {
+	get(uri: string, handler: (ctx: Context) => unknown) {
 		Router.createRoute(this, {uri, method: 'GET', handler})
 		return this
 	}
 
-	post(uri: string, handler: (ctx: IContext) => unknown) {
+	post(uri: string, handler: (ctx: Context) => unknown) {
 		Router.createRoute(this, {uri, method: 'POST', handler})
 		return this
 	}
 
-	put(uri: string, handler: (ctx: IContext) => unknown) {
+	put(uri: string, handler: (ctx: Context) => unknown) {
 		Router.createRoute(this, {uri, method: 'PUT', handler})
 		return this
 	}
 
-	head(uri: string, handler: (ctx: IContext) => unknown) {
+	head(uri: string, handler: (ctx: Context) => unknown) {
 		Router.createRoute(this, {uri, method: 'HEAD', handler})
 		return this
 	}
 
-	delete(uri: string, handler: (ctx: IContext) => unknown) {
+	delete(uri: string, handler: (ctx: Context) => unknown) {
 		Router.createRoute(this, {uri, method: 'DELETE', handler})
 		return this
 	}
 
-	options(uri: string, handler: (ctx: IContext) => unknown) {
+	options(uri: string, handler: (ctx: Context) => unknown) {
 		Router.createRoute(this, {uri, method: 'OPTIONS', handler})
 		return this
 	}
 
-	connect(uri: string, handler: (ctx: IContext) => unknown) {
+	connect(uri: string, handler: (ctx: Context) => unknown) {
 		Router.createRoute(this, {uri, method: 'CONNECT', handler})
 		return this
 	}
-	trace(uri: string, handler: (ctx: IContext) => unknown) {
+	trace(uri: string, handler: (ctx: Context) => unknown) {
 		Router.createRoute(this, {uri, method: 'TRACE', handler})
 		return this
 	}
-	patch(uri: string, handler: (ctx: IContext) => unknown) {
+	patch(uri: string, handler: (ctx: Context) => unknown) {
 		Router.createRoute(this, {uri, method: 'PATCH', handler})
 		return this
 	}
