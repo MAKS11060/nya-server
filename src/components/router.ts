@@ -32,8 +32,11 @@ interface IRouter {
 	put(uri: string, handler: (ctx: IContext) => unknown): this
 	post(uri: string, handler: (ctx: IContext) => unknown): this
 	head(uri: string, handler: (ctx: IContext) => unknown): this
+	trace(uri: string, handler: (ctx: IContext) => unknown): this
+	patch(uri: string, handler: (ctx: IContext) => unknown): this
 	delete(uri: string, handler: (ctx: IContext) => unknown): this
 	options(uri: string, handler: (ctx: IContext) => unknown): this
+	connect(uri: string, handler: (ctx: IContext) => unknown): this
 }
 
 export default class Router implements IRouter {
@@ -79,26 +82,6 @@ export default class Router implements IRouter {
 				handler: route.handler
 			}))
 	}
-
-	/*middleware() {
-		return async (ctx): Promise<void> => {
-			try {
-				for (const handler of this.store.middleware || []) {
-					if (ctx.socket.writable)
-						await handler(ctx)
-				}
-
-				for (const route of Router.find(this, ctx.method, ctx.url.pathname)) {
-					if (ctx.socket.writable) {
-						ctx.params = route.params
-						ctx.next = await route.handler(ctx) || undefined
-					}
-				}
-			} catch (e) {
-				throw e
-			}
-		}
-	}*/
 
 	middleware() {
 		return async (ctx: IContext): Promise<void> => {
@@ -155,6 +138,19 @@ export default class Router implements IRouter {
 
 	options(uri: string, handler: (ctx: IContext) => unknown) {
 		Router.createRoute(this, {uri, method: 'OPTIONS', handler})
+		return this
+	}
+
+	connect(uri: string, handler: (ctx: IContext) => unknown) {
+		Router.createRoute(this, {uri, method: 'CONNECT', handler})
+		return this
+	}
+	trace(uri: string, handler: (ctx: IContext) => unknown) {
+		Router.createRoute(this, {uri, method: 'TRACE', handler})
+		return this
+	}
+	patch(uri: string, handler: (ctx: IContext) => unknown) {
+		Router.createRoute(this, {uri, method: 'PATCH', handler})
 		return this
 	}
 }
