@@ -13,16 +13,20 @@ const EXTENSIONS = [
 	'.png', '.jpg', '.svg', '.webp'
 ]
 
+const EXTENSIONS_DEV = [
+	'.map'
+]
+
 export class SPA extends TypedEmitter<SPAEvents> {
 	readonly index: string = 'index.html'
 	readonly root: string
 	readonly exts: Set<string>
 
-	constructor(options: { index: string; root?: string; fileExtension?: string[] }) {
+	constructor(options: { index: string; root?: string; fileExtension?: string[]; dev?: boolean; }) {
 		super()
 		this.index = path.resolve(options.index)
 		this.root = options.root ? path.resolve(options.root) : path.dirname(this.index)
-		this.exts = new Set(options?.fileExtension || EXTENSIONS)
+		this.exts = new Set(options?.fileExtension || options.dev ? [...EXTENSIONS, ...EXTENSIONS_DEV] : EXTENSIONS)
 	}
 
 	middleware(): (ctx: Context) => void {
