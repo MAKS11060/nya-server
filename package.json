@@ -1,6 +1,6 @@
 {
   "name": "nya-server",
-  "version": "0.7.4",
+  "version": "0.7.5",
   "description": "",
   "keywords": [
     "backend",
@@ -11,24 +11,20 @@
   ],
   "license": "MIT",
   "type": "module",
-  "main": "./dist/index.js",
   "exports": "./dist/index.js",
   "types": "./types/index.d.ts",
   "author": "maks11060 <maks11060@gmail.com>",
-  "repository": "https://github.com/maks11060/nya-server",
+  "repository": "git://github.com/maks11060/nya-server.git",
   "scripts": {
-    "start": "node ./dist/app/index.js",
-    "start:watch": "nodemon ./dist/app/index.js",
     "build": "tsc",
-    "build:watch": "tsc -w",
-    "build:test-app": "tsc app/index.ts --outDir dist -t esnext -m esnext -w --moduleResolution node --allowSyntheticDefaultImports",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "build:test-app": "tsc -w app/index.ts --outDir dist -t esnext -m esnext --moduleResolution node --allowSyntheticDefaultImports",
+    "start:watch": "nodemon ./dist/app/index.js"
   },
   "engines": {
     "node": ">=14.0.0"
   },
   "dependencies": {
-    "bytes": "^3.1.0",
     "duplexify": "^4.1.2",
     "mime": "^2.5.2",
     "ms": "^2.1.3",
@@ -37,6 +33,7 @@
     "ws": "8.2.2"
   },
   "devDependencies": {
+    "@types/duplexify": "^3.6.0",
     "@types/mime": "^2.0.3",
     "@types/node": "16.9.2",
     "typescript": "^4.4.3"

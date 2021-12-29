@@ -1,22 +1,24 @@
-import {Context} from './context.js'
-
-
-export type Middleware = (ctx: Context) => void
+import http from 'http'
+import http2 from 'http2'
+import {Context, ContextHTTP, ContextHTTP2} from './context.js'
+import {App} from './index.js'
 
 export class Handler {
-	private stack: (Middleware)[] = []
+	app: App
 
-	static create() {
-		return new this()
+	constructor(app: App) {
+		this.app = app
 	}
 
-	add(handler: Middleware) {
-		this.stack.push(handler)
+	httpRequest(req: http.IncomingMessage, res: http.ServerResponse): void {
+		const context = new Context(this.app, new ContextHTTP(req, res))
+		this.app.router.middleware()(context)
+			.then(() => context.send())
 	}
 
-	async run(context: Context) {
-		for (let handler of this.stack) {
-			await handler(context)
-		}
+	streamRequest(stream: http2.ServerHttp2Stream, headers: http2.IncomingHttpHeaders, flags: number): void {
+		const context = new Context(this.app, new ContextHTTP2(stream, headers))
+		this.app.router.middleware()(context)
+			.then(() => context.send())
 	}
 }

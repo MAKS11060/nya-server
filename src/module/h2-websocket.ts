@@ -1,5 +1,5 @@
 import WS from 'ws'
-import {Context} from '../context.js'
+import {Context, Middleware} from '../context.js'
 import {TypedEmitter} from 'tiny-typed-emitter'
 
 type WebSocketClientEvents = {
@@ -54,16 +54,15 @@ class WebSocketClient extends TypedEmitter<WebSocketClientEvents> {
 export class H2Websocket extends TypedEmitter<WebSocketEvents> {
 	readonly clients: Set<WebSocketClient> = new Set
 
-	middleware(options?: { maxPayload?: number; skipUTF8Validation?: number; validateWebSocket?: boolean }): (ctx: Context) => any {
+	middleware(options?: { maxPayload?: number; skipUTF8Validation?: number; validateWebSocket?: boolean }): Middleware {
 		return ctx => {
 			if (options.validateWebSocket) {
 				if (ctx.headers[':protocol'] !== 'websocket') throw new Error('Headers[:protocol] not valid')
 				if (!ctx.headers.origin) throw new Error('Headers[origin] is undefined')
 			}
 
-			ctx.url.protocol = ctx.url.protocol === 'https:' ? 'wss' : 'ws'
-			ctx.autoClose = false
-			ctx.respond()
+			ctx.uri.protocol = ctx.uri.protocol === 'https:' ? 'wss' : 'ws'
+			ctx.respond().send(null, true)
 
 			const socket = new WebSocketClient(ctx, {maxPayload: 100 * 1024 * 1024, ...options})
 			this.clients.add(socket)

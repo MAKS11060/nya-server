@@ -1,8 +1,8 @@
 import {parse} from 'regexparam'
-import {Context} from '../context.js'
+import {Context, Middleware} from '../context.js'
 
 
-const exec = (path: string, result: { keys: string[], pattern: RegExp }): {[key: string]: string | null} => {
+const exec = (path: string, result: { keys: string[], pattern: RegExp }): { [key: string]: string | null } => {
 	let i = 0, out = {}
 	let matches = result.pattern.exec(path)
 	while (i < result.keys.length) {
@@ -18,30 +18,38 @@ type IRoute = {
 	uriParams?: { keys: string[], pattern: RegExp }
 }
 
-type IMiddleware = (ctx: Context) => void
-
 interface IRouter {
 	store: {
-		middleware?: IMiddleware[]
+		middleware?: Middleware[]
 		routes?: IRoute[]
 	}
 
-	use(handler: IMiddleware): this
+	use(handler: Middleware): this
+
 	all(uri: string, handler: (ctx: Context) => unknown): this
+
 	get(uri: string, handler: (ctx: Context) => unknown): this
+
 	put(uri: string, handler: (ctx: Context) => unknown): this
+
 	post(uri: string, handler: (ctx: Context) => unknown): this
+
 	head(uri: string, handler: (ctx: Context) => unknown): this
+
 	trace(uri: string, handler: (ctx: Context) => unknown): this
+
 	patch(uri: string, handler: (ctx: Context) => unknown): this
+
 	delete(uri: string, handler: (ctx: Context) => unknown): this
+
 	options(uri: string, handler: (ctx: Context) => unknown): this
+
 	connect(uri: string, handler: (ctx: Context) => unknown): this
 }
 
 export default class Router implements IRouter {
 	store: {
-		middleware?: IMiddleware[]
+		middleware?: Middleware[]
 		routes?: IRoute[]
 	}
 
@@ -62,7 +70,7 @@ export default class Router implements IRouter {
 		store.routes = [...store.routes || [], route]
 	}
 
-	static createMiddleware(router: IRouter, handler: IMiddleware | Router) {
+	static createMiddleware(router: IRouter, handler: Middleware | Router) {
 		const {store} = router
 
 		if (typeof handler === 'function') {
@@ -78,7 +86,7 @@ export default class Router implements IRouter {
 			.filter(route => (route.method === method || route.method === '*') && route.uriParams.pattern.test(uri))
 			.map((route: IRoute) => ({
 				uri: route.uri ? route.uri : null,
-				params: route.uri ? exec(uri, route.uriParams) : null,
+				params: route.uri ? new Map(Object.entries(exec(uri, route.uriParams))) : null,
 				handler: route.handler
 			}))
 	}
@@ -90,8 +98,8 @@ export default class Router implements IRouter {
 					if (ctx.stream.writable) await handler(ctx)
 				}
 
-				for (const route of Router.find(this, ctx.method, ctx.url.pathname)) {
-					if (ctx.isSend) return
+				for (const route of Router.find(this, ctx.method, ctx.uri.pathname)) {
+					if (ctx.isSent) return
 					ctx.params = route.params
 					ctx.next = await route.handler(ctx) || undefined
 				}
@@ -101,7 +109,7 @@ export default class Router implements IRouter {
 		}
 	}
 
-	use(handler: IMiddleware | this) {
+	use(handler: Middleware | this) {
 		Router.createMiddleware(this, handler)
 		return this
 	}
@@ -145,10 +153,12 @@ export default class Router implements IRouter {
 		Router.createRoute(this, {uri, method: 'CONNECT', handler})
 		return this
 	}
+
 	trace(uri: string, handler: (ctx: Context) => unknown) {
 		Router.createRoute(this, {uri, method: 'TRACE', handler})
 		return this
 	}
+
 	patch(uri: string, handler: (ctx: Context) => unknown) {
 		Router.createRoute(this, {uri, method: 'PATCH', handler})
 		return this

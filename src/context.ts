@@ -1,200 +1,104 @@
-import {constants, IncomingHttpHeaders, ServerHttp2Stream, ServerStreamResponseOptions} from 'http2'
-import {OutgoingHttpHeaders} from 'http'
+import http from 'http'
+import http2, {ServerStreamResponseOptions} from 'http2'
+import {TLSSocket} from 'tls'
+import Duplexify from 'duplexify'
+import mime from 'mime'
+import {ContentType, Header, SocketInfo} from './interface/context.js'
 import {Cookie} from './components/cookie.js'
 import {Body} from './components/body.js'
-import mime from 'mime'
+import {App} from './index.js'
 
+export class ContextHTTP {
+	readonly req: http.IncomingMessage
+	readonly res: http.ServerResponse
+	readonly stream: Duplexify.Duplexify
+	readonly uri: URL
 
-type ContentType = string
-	| 'text/plain'
-	| 'text/html'
-	| 'text/css'
-	| 'text/event-stream'
-	| 'application/json'
-	| 'application/javascript'
-	| 'application/x-www-form-urlencoded'
-	| 'multipart/form-data'
+	header: Header = {}
 
-export type IUserContext = {}
+	private _pipe: boolean
+	private _sent: boolean
 
-export interface IContext extends IUserContext {
-	stream: ServerHttp2Stream
-	headers: IncomingHttpHeaders
-	url: URL
+	constructor(req: http.IncomingMessage, res: http.ServerResponse) {
+		this.req = req
+		this.res = res
+		this.stream = new Duplexify(res, req)
+		this.uri = this.encrypted ?
+			new URL(req.url, `https://${this.headers.host}`) :
+			new URL(req.url, `http://${this.headers.host}`)
 
-	method: string
-	pathname: string
-	query: URLSearchParams
+		Object.defineProperties(this, {
+			_pipe: {value: false, writable: true},
+			_send: {value: false, writable: true},
+		})
 
-	state: NodeJS.Dict<any>
-
-	params: NodeJS.Dict<string>
-	next: unknown
-
-	header: OutgoingHttpHeaders
-	statusCode: number
-	autoClose: boolean
-	isSend: boolean
-
-	readonly body: Body
-	piped: boolean
-
-	cookies: Map<string, string>
-	cookie: Cookie
-
-	respond(headers?: OutgoingHttpHeaders, options?: ServerStreamResponseOptions): this
-
-	status(code: number): this
-
-	type(type: ContentType): this
-
-	mimeType(filename: string): this
-
-	send(data?: string | Buffer | undefined | null, holdStream?: boolean): void
-
-	html(data?: string | Buffer): void
-
-	text(data?: string | Buffer): void
-
-	json(data: object, replacer?: (this: any, key: string, value: any) => any, space?: string | number): void
-}
-
-export class Context implements IContext {
-	stream: ServerHttp2Stream
-	headers: IncomingHttpHeaders
-	url: URL
-
-	params = {}
-	state = {}
-	next: unknown
-
-	header: OutgoingHttpHeaders = {}
-
-	private errors: Error[]
-
-	constructor(stream: ServerHttp2Stream, headers: IncomingHttpHeaders) {
-		this.stream = stream
-		this.headers = headers
-		this.url = new URL(
-			headers[':path'].replace(/\/+$/, '') || '/',
-			`${headers[':scheme']}://${headers[':authority'] || headers['host']}`
-		)
-
-		this.stream.on('pipe', () => this._piped = true)
-		this.stream.on('unpipe', () => this._piped = false)
-
-		this._cookie = Cookie.create(this)
+		this.stream.once('pipe', () => this.respond())
+		this.stream.on('pipe', () => this._pipe = true)
+		this.stream.on('unpipe', () => this._pipe = false)
 	}
 
-	_piped: boolean = false
-
-	get piped(): boolean {
-		return this._piped
+	get socket(): TLSSocket {
+		return <TLSSocket>this.res.socket
 	}
 
-	_statusCode: number = 200
-
-	get statusCode(): number {
-		return this._statusCode
+	get encrypted(): boolean {
+		return this.req.socket instanceof TLSSocket ? this.req.socket.encrypted : false
 	}
 
-	_autoClose: boolean = true
-
-	get autoClose(): boolean {
-		return this._autoClose
-	}
-
-	set autoClose(v) {
-		this._autoClose = v
-	}
-
-	private _isSend: boolean = false
-
-	get isSend(): boolean {
-		return this._isSend
-	}
-
-	private _body: Body
-
-	get body(): Body {
-		if (this._body) return this._body
-		return this._body = Body.create(this, '10mb')
-	}
-
-	private _cookie: Cookie
-
-	get cookie(): Cookie {
-		return this._cookie
-	}
-
-	get cookies(): Map<string, string> {
-		return this._cookie.cookies
+	get headers(): http.IncomingHttpHeaders {
+		return this.req.headers
 	}
 
 	get method(): string {
-		return this.headers[':method']
+		return this.req.method
 	}
 
-	get pathname(): string {
-		return this.url.pathname
+	get statusCode(): number {
+		return +this.header?.[':status'] || 200
 	}
 
-	get query(): URLSearchParams {
-		return this.url.searchParams
+	get isRespond(): boolean {
+		return this.res.headersSent
 	}
 
-	static create(stream: ServerHttp2Stream, headers: IncomingHttpHeaders): Context {
-		return new this(stream, headers)
+	get isSent(): boolean {
+		return this._sent
 	}
 
-	respond(headers?: OutgoingHttpHeaders, options?: ServerStreamResponseOptions): this {
-		if (this.cookie.size) this.header[constants.HTTP2_HEADER_SET_COOKIE] = this.cookie.cookie
-
-		if (!this.stream.headersSent) this.stream.respond({
-			...this.header,
-			...headers
-		}, options)
-		return this
+	get isPipe(): boolean {
+		return this._pipe
 	}
 
-	status(code: number): this {
-		this._statusCode = this.header[constants.HTTP2_HEADER_STATUS] = code
-		return this
+	respond(headers?: any): this {
+		if (this.isRespond) return this
+		// if (this.cookie.size) this.header['set-cookie'] = this.cookie.toArray()
+		const {':status': _, ...header} = this.header
+		this.res.writeHead(this.statusCode, {...header, ...headers})
 	}
 
-	type(contentType: ContentType): this {
-		this.header[constants.HTTP2_HEADER_CONTENT_TYPE] = contentType
-		return this
-	}
-
-	mimeType(path: string): this {
-		this.type(mime.getType(path))
-		return this
-	}
-
-	send(data?: string | Buffer | null | undefined, holdStream?: boolean) {
-		this._isSend = true
-
+	send(data?: Buffer | string | undefined | null, holdStream?: boolean): void {
 		data = typeof data === 'string' ?
 			Buffer.from(data) : Buffer.isBuffer(data) ?
 				data : Buffer.from('')
 
-		if (!this.stream.headersSent)
-			this.header[constants.HTTP2_HEADER_CONTENT_LENGTH] = data.byteLength
+		if (!this.isSent) this.header['content-length'] = data.byteLength
 
-		if (this.stream.writable && !this.piped) {
-			if (!this.stream.headersSent) this.respond()
+		if (this.stream.writable && !this.isPipe) {
+			if (!this.isSent) this.respond()
 
-			if (this.statusCode === 204 || this.statusCode === 304)
-				return this.stream.end()
+			if (this.statusCode === 204 || this.statusCode === 304) return this.stream.end()
 
-			if (!holdStream && this.autoClose)
-				this.stream.end(data)
-			else {
-				this.stream.write(data)
-				this._autoClose = false
-			}
+			holdStream ? this.stream.write(data) : this.stream.end(data)
+
+			// if (!holdStream && this.autoClose)
+			// this.stream.end(data)
+			// else {
+			// 	this.stream.write(data)
+			// 	this._autoClose = false
+			// }
 		}
+
+		this._sent = true
 
 		// ?? Ok
 		if (this.method === 'HEAD') {
@@ -203,23 +107,258 @@ export class Context implements IContext {
 			return
 		}
 	}
+}
 
-	html(data: string | Buffer | undefined): void {
+export class ContextHTTP2 {
+	readonly stream: http2.ServerHttp2Stream
+	readonly headers: http2.IncomingHttpHeaders
+	readonly uri: URL
+
+	header: Header = {}
+
+	private _pipe: boolean
+	private _sent: boolean
+
+	constructor(stream: http2.ServerHttp2Stream, headers: http2.IncomingHttpHeaders) {
+		this.stream = stream
+		this.headers = headers
+		this.uri = new URL(
+			headers[':path'].replace(/\/+$/, '') || '/',
+			`${headers[':scheme']}://${headers[':authority'] || headers['host']}`
+		)
+
+		Object.defineProperties(this, {
+			_pipe: {value: false, writable: true},
+			_send: {value: false, writable: true},
+		})
+
+		this.stream.once('pipe', () => this.respond())
+		this.stream.on('pipe', () => this._pipe = true)
+		this.stream.on('unpipe', () => this._pipe = false)
+	}
+
+	get socket(): TLSSocket {
+		return <TLSSocket>this.stream.session.socket
+	}
+
+	get encrypted(): boolean {
+		return true
+	}
+
+	get method(): string {
+		return this.headers[':method']
+	}
+
+	get statusCode(): number {
+		return +this.header?.[':status'] || 200
+	}
+
+	get isRespond(): boolean {
+		return this.stream.headersSent
+	}
+
+	get isSent(): boolean {
+		return this._sent
+	}
+
+	get isPipe(): boolean {
+		return this._pipe
+	}
+
+	respond(headers?: Header, options?: ServerStreamResponseOptions): this {
+		if (this.isRespond) return this
+		this.stream.respond({...this.header, ...headers}, options)
+	}
+
+	send(data?: string | Buffer | undefined | null, holdStream?: boolean): void {
+		data = typeof data === 'string' ?
+			Buffer.from(data) : Buffer.isBuffer(data) ?
+				data : Buffer.from('')
+
+		if (!this.isSent) this.header['content-length'] = data.byteLength
+
+		if (this.stream.writable && !this.isPipe) {
+			if (!this.isSent) this.respond()
+
+			if (this.statusCode === 204 || this.statusCode === 304)
+				return this.stream.end()
+
+			holdStream ? this.stream.write(data) : this.stream.end(data)
+
+			// if (!holdStream/* && this.autoClose*/)
+			// this.stream.end(data)
+			// else {
+			// 	this.stream.write(data)
+			// 	this._autoClose = false
+			// }
+		}
+
+		this._sent = true
+
+		// ?? Ok
+		if (this.method === 'HEAD') {
+			this.respond()
+			this.stream.end()
+			return
+		}
+	}
+}
+
+export class Context {
+	next: any
+	params: Map<string, string>
+
+	private app: App
+	private base: ContextHTTP | ContextHTTP2
+
+	private _holdStream: boolean
+
+	constructor(app: App, base: ContextHTTP | ContextHTTP2) {
+		Object.defineProperty(this, 'app', {writable: false, value: app})
+		Object.defineProperty(this, 'base', {writable: false, enumerable: false, value: base})
+
+		Object.defineProperty(this, 'params', {writable: true, enumerable: true})
+
+		Object.defineProperty(this, '_holdStream', {writable: true, enumerable: false})
+		Object.defineProperty(this, '_cookie', {writable: true, enumerable: false})
+		Object.defineProperty(this, '_body', {writable: true, enumerable: false})
+	}
+
+	get appOptions() {
+		return Object.assign({}, this.app.options)
+	}
+
+	private _body: Body
+
+	get body(): Body {
+		if (!this._body)
+			Object.defineProperty(this, '_body', {enumerable: false, value: new Body(this)})
+		return this._body
+	}
+
+	private _cookie: Cookie
+
+	get cookie(): Cookie {
+		if (!this._cookie)
+			Object.defineProperty(this, '_cookie', {enumerable: false, value: new Cookie(this.headers?.cookie)})
+		return this._cookie
+	}
+
+	get cookies(): Map<string, string> {
+		return this.cookie.cookies
+	}
+
+	get encrypted(): boolean {
+		return this.base.encrypted
+	}
+
+	get socketInfo(): SocketInfo {
+		const socket = this.base.socket
+		return {
+			remoteFamily: socket.remoteFamily,
+			remoteAddress: socket.remoteAddress,
+			remotePort: socket.remotePort,
+			localAddress: socket.localAddress,
+			localPort: socket.localPort,
+		}
+	}
+
+	get headers() {
+		return this.base.headers
+	}
+
+	get method(): string {
+		return this.base.method
+	}
+
+	get uri(): URL {
+		return this.base.uri
+	}
+
+	get pathname(): string {
+		return this.uri.pathname
+	}
+
+	get query(): URLSearchParams {
+		return this.uri.searchParams
+	}
+
+	get header(): Header {
+		return this.base.header
+	}
+
+	get statusCode(): number {
+		return +this.header?.[':status'] || 200
+	}
+
+	get stream() {
+		return this.base.stream
+	}
+
+	get isSent(): boolean {
+		return this.base.isSent
+	}
+
+	get isPipe(): boolean {
+		return this.base.isPipe
+	}
+
+	get isRespond(): boolean {
+		return this.base.isRespond
+	}
+
+	get isHoldStream(): boolean {
+		return this._holdStream
+	}
+
+	// Set status code
+	status(code: number): this {
+		this.header[':status'] = code
+		return this
+	}
+
+	// Send headers to client
+	respond(headers?: Header): this {
+		if (this.cookie.size) this.header['set-cookie'] = this.cookie.toArray()
+		return this
+	}
+
+	// Set content type
+	type(contentType: ContentType): this {
+		this.header['content-type'] = contentType
+		return this
+	}
+
+	// use mime.getType("/file.ext") and ctx.type(...)
+	mimeType(path: string): this {
+		this.type(mime.getType(path))
+		return this
+	}
+
+	// ctx.respond() and Send Data to client
+	send(data?: string | Buffer | undefined | null, holdStream?: boolean): void {
+		this.respond()
+		this._holdStream = holdStream ?? this._holdStream
+		this.base.send(data, this.isHoldStream)
+	}
+
+	// Set ctx.type('text/html') and send(...)
+	html(data: string | Buffer): void {
 		this.type('text/html; charset=utf-8')
 		this.send(data)
 	}
 
-	json(data: object, replacer?: ((this: any, key: string, value: any) => any) | undefined, space?: string | number | undefined): void {
-		this.type('application/json')
-		this.send(Buffer.from(JSON.stringify(data, replacer, space)))
-	}
-
+	// Set ctx.type('text/plain') and send(...)
 	text(data: string | Buffer | undefined): void {
 		this.type('text/plain; charset=utf-8')
 		this.send(data)
 	}
 
-	error(err: Error) {
-		this.errors.push(err)
+	// ctx.type('application/json') and send(JSON.stringify({...}))
+	json(data: object, replacer?: ((this: any, key: string, value: any) => any) | undefined, space?: string | number | undefined): void {
+		this.type('application/json')
+		this.send(Buffer.from(JSON.stringify(data, replacer, space)))
 	}
 }
+
+export type Middleware = (ctx: Context) => void

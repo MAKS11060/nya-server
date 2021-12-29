@@ -1,56 +1,46 @@
-import {Context} from '../context.js'
 import qs, {ParsedUrlQuery} from 'querystring'
-import bytes from 'bytes'
+import {Stream} from 'stream'
+import {Context} from '../context.js'
 
-
-export interface IBody {
-	bodyUsed: boolean
-
-	json(): Promise<any>
-
-	text(): Promise<string>
-
-	urlencoded(): Promise<ParsedUrlQuery>
+export type BodyOptions = {
+	maxBodySize: number
 }
 
-export class Body implements IBody {
-	public bodyUsed: boolean
-	private byteLengthLimit: number
-	private readonly body: Promise<Buffer>
+export class Body {
+	options: BodyOptions = {
+		maxBodySize: 1024 * 512
+	}
 
-	constructor(ctx: Context, limit: string | number = '10mb') {
-		this.limit = limit
+	private body: Promise<Buffer>
+	private bodyUsed: boolean = false
 
-		const {stream, headers: {'content-length': size}} = ctx
-		this.body = new Promise<Buffer>((resolve, reject) => {
+	constructor(ctx: Context) {
+		for (const optionsKey in this.options) {
+			if (ctx.appOptions?.[optionsKey]) this.options[optionsKey] = ctx.appOptions[optionsKey]
+		}
+
+		const size = +ctx.headers['content-length']
+		if (size) {
+			this.body = Body.getPromiseBody(ctx.stream, size, this.options.maxBodySize)
+		} else throw new Error('411 Content Length is Required')
+	}
+
+	static getPromiseBody(stream: Stream, size: number, maxBodySize: number): Promise<Buffer> {
+		return new Promise<Buffer>((resolve, reject) => {
 			let bytesRead = 0
 			let buf = []
-
-			if (!+size) ctx.status(411).send(`411 - Length Required`)
 
 			stream.on('data', (chunk: Buffer) => {
 				bytesRead += chunk.byteLength
 
-				if (this.byteLengthLimit >= bytesRead) buf.push(chunk)
-				else ctx.status(411).send(`413 - Payload Too Large`)
+				if (maxBodySize >= bytesRead) buf.push(chunk)
+				else reject(new Error('Payload Too Large'))
 
 				if (+size === bytesRead) stream.emit('end')
 			})
 			stream.once('end', () => resolve(Buffer.concat(buf)))
 			stream.once('error', err => reject(err))
 		})
-	}
-
-	get limit() {
-		return this.byteLengthLimit
-	}
-
-	set limit(val: string | number) {
-		this.byteLengthLimit = bytes.parse(val)
-	}
-
-	static create(ctx: Context, limit?: string | number) {
-		return new this(ctx, limit)
 	}
 
 	text(encoding?: BufferEncoding): Promise<string> {
