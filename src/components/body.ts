@@ -57,4 +57,8 @@ export class Body {
 		this.bodyUsed = true
 		return this.body.then(value => qs.parse(value.toString()))
 	}
+
+	async buffer(): Promise<Buffer> {
+		return this.body
+	}
 }
