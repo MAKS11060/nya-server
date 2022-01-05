@@ -55,8 +55,9 @@ export class SPA extends TypedEmitter<SPAEvents> {
 
 		this.createCacheMap()
 
-		if (options.watch) Files.watchFolder('./app/dist', 250, async (eventType, filename) => {
+		if (options.watch) Files.watchFolder(this.root, 250, async (eventType, filename) => {
 			if (eventType == 'rename') await this.createCacheMap()
+			if (!options.log) return
 			if (eventType == 'rename') console.log('[re]createCacheMap')
 		})
 	}
