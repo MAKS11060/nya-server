@@ -81,7 +81,7 @@ export class ContextHTTP {
 			Buffer.from(data) : Buffer.isBuffer(data) ?
 				data : Buffer.from('')
 
-		if (!this.isSent) this.header['content-length'] = data.byteLength
+		if (!this.isSent && !holdStream) this.header['content-length'] = data.byteLength
 
 		if (this.stream.writable && !this.isPipe) {
 			if (!this.isSent) this.respond()
