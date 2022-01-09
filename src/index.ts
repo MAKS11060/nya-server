@@ -6,8 +6,8 @@ import Router from './components/router.js'
 import {Handler} from './handler.js'
 import {BodyOptions} from './components/body.js'
 
-export {SPA} from './module/spa.js'
-export {H2Websocket} from './module/h2-websocket.js'
+export * from './module/spa.js'
+export * from './module/h2-websocket.js'
 
 type AppUtilitiesOptions = {
 	forceHTTPS?: boolean

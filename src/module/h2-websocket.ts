@@ -8,16 +8,19 @@ type WebSocketClientEvents = {
 	message: (data: string | Buffer, binary: boolean) => void
 }
 
-type WebSocketEvents = {
-	connect: (socket: WebSocketClient, ctx: Context) => void
-	close: (socket: WebSocketClient, ctx: Context) => void
+type WSClientContext = Context & { stream: { setNoDelay?: Function } }
+
+type WSClientOptions = {
+	maxPayload: number
+	skipUTF8Validation?: number
 }
 
-class WebSocketClient extends TypedEmitter<WebSocketClientEvents> {
-	private ws: any
+export class WebSocketClient extends TypedEmitter<WebSocketClientEvents> {
 	ctx: Context
 
-	constructor(ctx: Context & { stream: { setNoDelay?: Function } }, options?: { maxPayload: number; skipUTF8Validation?: number }) {
+	private ws: any
+
+	constructor(ctx: WSClientContext, options: WSClientOptions) {
 		super()
 		this.ctx = ctx
 		ctx.stream.setNoDelay = () => null
@@ -51,10 +54,21 @@ class WebSocketClient extends TypedEmitter<WebSocketClientEvents> {
 	}
 }
 
-export class H2Websocket extends TypedEmitter<WebSocketEvents> {
+type H2WebSocketEvents = {
+	connect: (socket: WebSocketClient, ctx: Context) => void
+	close: (socket: WebSocketClient, ctx: Context) => void
+}
+
+type H2WebSocketOptions = {
+	maxPayload?: number
+	skipUTF8Validation?: number
+	validateWebSocket?: boolean
+}
+
+export class H2Websocket extends TypedEmitter<H2WebSocketEvents> {
 	readonly clients: Set<WebSocketClient> = new Set
 
-	middleware(options?: { maxPayload?: number; skipUTF8Validation?: number; validateWebSocket?: boolean }): Middleware {
+	middleware(options?: H2WebSocketOptions): Middleware {
 		return ctx => {
 			if (options.validateWebSocket) {
 				if (ctx.headers[':protocol'] !== 'websocket') throw new Error('Headers[:protocol] not valid')
@@ -76,9 +90,13 @@ export class H2Websocket extends TypedEmitter<WebSocketEvents> {
 		}
 	}
 
-	send(data: string | Buffer) {
+	send(...data: Parameters<WebSocketClient['send']>) {
 		for (const client of this.clients) {
-			client.send(data)
+			client.send(...data)
 		}
+	}
+
+	[Symbol.iterator](): IterableIterator<WebSocketClient> {
+		return this.clients.values()
 	}
 }
