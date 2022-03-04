@@ -1,6 +1,6 @@
 {
   "name": "@maks11060/nya-server",
-  "version": "0.7.9",
+  "version": "0.8.0",
   "description": "",
   "keywords": [
     "backend",
@@ -17,7 +17,7 @@
   "repository": "git://github.com/maks11060/nya-server.git",
   "scripts": {
     "build": "tsc",
-    "build:w": "npm run bluid -- -w",
+    "build:w": "npm run build -- -w",
     "prepare": "npm run build",
     "build:test-app": "tsc -w app/index.ts --outDir dist -t esnext -m esnext --moduleResolution node --allowSyntheticDefaultImports",
     "start:watch": "nodemon ./dist/app/index.js"
