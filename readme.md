@@ -1,81 +1,82 @@
 # Nya-server
 
-Minimalist REST server
+REST HTTP/2 server 
+- Typescript
+- No req, res
+- Full async support
+- Support WebSocket on h2 (only)
+- May not work in commonsJS
 
 ## Installation
 
 ```bash
-$ pnpm install nya-server
-```
+$ pnpm install @maks11060/nya-server
 or
-```bash
-$ npm install nya-server
+$ npm install @maks11060/nya-server
 ```
 
 ## Usage
 
-Entry point
-```js
-//index.js
-import {App} from 'nya-server'
-import server from './server.js'
-import {app as router} from './app.js'
-
-const app = App.create()
-
-app.useServer(server)
-app.use(router)
-```
-
-```js
-//server.js
-import {Server} from 'nya-server'
-import path from 'path'
+Entry point:
+```ts
+// server.ts
+import {App, Server} from '@maks11060/nya-server'
 import fs from 'fs'
+import path from 'path'
 import os from 'os'
 
-const PORT = 50000 || process.env.PORT
+const {app, router} = new App()
 
-export const server = Server.createHTTP()
-// OR 
-export const server = Server.createHTTP2({
-  key: fs.readFileSync(path.join(os.homedir(), '.certs', process.env.PATH_KEY)),
-  cert: fs.readFileSync(path.join(os.homedir(), '.certs', process.env.PATH_CERT))
-})
+// Server.HTTP(app).listen(80)
+Server.HTTP2(app, {
+  // key: fs.readFileSync(path.join(os.homedir(), '.certs', process.env.PATH_KEY)),
+  // cert: fs.readFileSync(path.join(os.homedir(), '.certs', process.env.PATH_CERT)),
+}).listen(443)
 
-server.listen(PORT)
+router.useImport(import('./router.js'))
 ```
 
-```js
-//app.js
-import {Router} from 'nya-server'
+```ts
+// router.ts
+import {Router} from '@maks11060/nya-server'
 
-export const app = Router.create()
+export const router = new Router()
 
-app.use(ctx => {
-	console.log(`${ctx.method} ${ctx.pathname}`)
+router.get('/info', ctx => {
+  // ctx.send(JSON.stringify({}, null, 2))
+  ctx.json({
+    method: ctx.method,
+    uri: ctx.uri.toString(),
+    headers: ctx.headers,
+  }, null, 2)
 })
 
-app.get('/', ctx => {
-	ctx.html('<h2>Hello, World!</h2>')
+const posts = []
+router.post('/post', async ctx => {
+  try {
+    const post = await ctx.body.json()
+    posts.push(post)
+  } catch (e) {
+    ctx.send('Invalid data')
+  }
+})
+router.get('/post/:id', ctx => {
+  const id = +ctx.params.id
+  ctx.json({
+    post: posts[id] || null,
+    total: posts.length
+  })
 })
 
-app.all('/test', ctx => {
-	ctx.json(ctx.headers, null, 2)
-})
-
-const posts = new Map
-app.post('/post', async ctx => {
-	const {id, data} = await ctx.body.json()
-	posts.set(id, data)
-	ctx.send(`Post #${id} created: \n${data}`)
-})
-
-app.get('/post/:id', ctx => {
-	if (posts.has(ctx.params.id))
-		ctx.send(`${ctx.params.id} | ${posts.get(ctx.params.id)}`)
-	else
-		ctx.status(404).send('Post not found')
+router.post('/upload', ctx => {
+  ctx.body.size = 1024 * 512 // byte
+  return ctx.body.formData().then(data => {
+    console.log(data.files, data.fields)
+    ctx.send('upload ok')
+  }, reason => {
+    console.log(reason)
+    ctx.send('upload err')
+  })
 })
 ```
 
