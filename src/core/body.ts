@@ -1,6 +1,7 @@
 import qs, {ParsedUrlQuery} from 'querystring'
 import {Stream} from 'stream'
 import {Context} from './context.js'
+import {Multipart} from '../lib/multipart.js'
 import {StatusError} from '../lib/error.js'
 
 export type BodyOptions = {
@@ -79,5 +80,11 @@ export class Body {
 		this.bodyUsed = true
 		return this.buffer()
 			.then(value => qs.parse(value.toString()))
+	}
+
+	formData() {
+		this.bodyUsed = true
+		return this.buffer()
+			.then(value => new Multipart(value, Multipart.getBoundary(this.ctx.headers['content-type'])))
 	}
 }
