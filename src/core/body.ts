@@ -1,6 +1,7 @@
 import qs, {ParsedUrlQuery} from 'querystring'
 import {Stream} from 'stream'
 import {Context} from './context.js'
+import {StatusError} from '../lib/error.js'
 
 export type BodyOptions = {
 	bodySize: number
@@ -13,40 +14,46 @@ export class Body {
 
 	private ctx: Context
 	private bodyUsed: boolean = false
-	private _allowGETBody: boolean = false
 
 	constructor(ctx: Context) {
 		this.options.bodySize = ctx.app.options.bodySize
 		this.ctx = ctx
 	}
 
-	set size(value: number) {
-		this.options.bodySize = value
-	}
+	private _allowGETBody: boolean = false
 
 	get allowGETBody(): boolean {
 		return this._allowGETBody
 	}
+
 	set allowGETBody(value: boolean) {
 		this._allowGETBody = value
 	}
 
+	set size(value: number) {
+		this.options.bodySize = value
+	}
+
 	private static getPromiseBody(stream: Stream, size: number, maxBodySize: number): Promise<Buffer> {
-		if (!size) throw new Error('411 Content Length is Required')
+		if (!size) throw new StatusError(411)
 
 		return new Promise<Buffer>((resolve, reject) => {
-			let bytesRead = 0
+			let readBytes = 0
 			let buf = []
 
 			stream.on('data', (chunk: Buffer) => {
-				bytesRead += chunk.byteLength
-
-				if (maxBodySize >= bytesRead) buf.push(chunk)
-				else reject(new Error('Payload Too Large'))
-
-				if (+size === bytesRead) stream.emit('end')
+				readBytes += chunk.byteLength
+				if (readBytes <= size) buf.push(chunk)
+				else if (readBytes != size) // readBytes != size
+					buf = []
 			})
-			stream.once('end', () => resolve(Buffer.concat(buf)))
+			stream.once('end', () => {
+				// console.log(`end: size ${size} readBytes ${readBytes} limit ${maxBodySize}`)
+				readBytes == size && readBytes <= maxBodySize ?
+					resolve(Buffer.concat(buf)) :
+					reject(new StatusError(413))
+			})
+
 			stream.once('error', err => reject(err))
 		})
 	}
