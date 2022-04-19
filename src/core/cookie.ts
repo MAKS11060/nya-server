@@ -33,8 +33,8 @@ export class Cookie {
 	static parse(cookie: string): Map<string, string> {
 		const cookies: Map<string, string> = new Map
 		for (const cookiePair of cookie.split(pairSplitRegExp)) {
-			let [key, value] = cookiePair.split('=', 2).map(c => c.trim())
-			cookies.set(key, value)
+			const i = cookiePair.indexOf('=')
+			if (i > 0) cookies.set(cookiePair.slice(0, i).trim(), cookiePair.slice(i + 1).trim())
 		}
 		return cookies
 	}
