@@ -1,7 +1,4 @@
 {
-  "files": [
-    "./src/index.ts"
-  ],
   "compilerOptions": {
     "module": "ESNext",
     "target": "ESNext",
@@ -13,6 +10,9 @@
     "declarationDir": "./types",
     "outDir": "./dist",
   },
+  "files": [
+    "./src/index.ts"
+  ],
   "include": [
     "src/**/*"
   ],
