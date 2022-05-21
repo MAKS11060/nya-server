@@ -1,6 +1,9 @@
 # IDEA files
 .idea
 
+# Github
+.github
+
 # Source files
 src/
 app/
