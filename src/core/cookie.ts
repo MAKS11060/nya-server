@@ -1,5 +1,3 @@
-import ms from 'ms'
-
 const pairSplitRegExp = /; */
 //const sameSiteRegExp = /^(?:lax|strict)$/i
 //const fieldContentRegExp = /^[\u0009\u0020-\u007e\u0080-\u00ff]+$/
@@ -7,10 +5,11 @@ const pairSplitRegExp = /; */
 type Options = {
 	domain?: string
 	path?: string
-	expires?: Date
+	expires?: Date | number
+	// maxAge: Seconds
 	maxAge?: number
 	httpOnly?: boolean
-	sameSite?: string | 'lax' | 'strict' | 'none'
+	sameSite?: 'lax' | 'strict' | 'none'
 	secure?: boolean
 }
 
@@ -43,8 +42,8 @@ export class Cookie {
 		return `${key}=${value}`
 			+ (opts.domain && `; domain=${opts.domain}` || '')
 			+ (opts.path && `; path=${opts.path}` || '')
-			+ (opts.expires && `; expires=${opts.expires.toUTCString()}` || '')
-			+ (opts.maxAge && `; Max-Age=${typeof opts.maxAge === 'string' ? ms(opts.maxAge) / 1000 : opts.maxAge}` || '')
+			+ (opts.expires && `; expires=${opts.expires instanceof Date ? opts.expires.toUTCString() : new Date(opts.expires).toUTCString()}` || '')
+			+ (opts.maxAge && `; Max-Age=${opts.maxAge}` || '')
 			+ (opts.httpOnly && '; httponly' || '')
 			+ (opts.sameSite && `; samesite=${opts.sameSite}` || '')
 			+ (opts.secure && '; secure' || '')
@@ -54,7 +53,7 @@ export class Cookie {
 		this._cookie.set(key, Cookie.createCookie(key, value, options))
 	}
 
-	get(key: string): string {
+	get(key: string): string | undefined {
 		return this._cookie.get(key)
 	}
 
