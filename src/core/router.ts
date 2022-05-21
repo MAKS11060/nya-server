@@ -13,7 +13,7 @@ const exec = (path: string, result: { keys: string[], pattern: RegExp }): { [key
 
 type Route = {
 	uri: string
-	method: string
+	method: string | null
 	handler: Handle<Method, string>
 	uriParams?: { keys: string[], pattern: RegExp }
 }
@@ -41,7 +41,7 @@ export class Router {
 			}))
 	}
 
-	private static createRoute<Path extends string>(self: Router, uri: Path, method: Method, handler: Handle<Method, ParseRouteParams<Path>>) {
+	private static createRoute<Path extends string>(self: Router, uri: Path, method: Method | null, handler: Handle<Method, ParseRouteParams<Path>>) {
 		self.routes.push({uri, method, handler, uriParams: parse(uri)})
 	}
 
