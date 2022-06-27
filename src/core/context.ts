@@ -408,7 +408,7 @@ export class Context<M extends Method = Method, P extends string = string> {
 	}
 
 	// ctx.type('application/json') and send(JSON.stringify({...}))
-	json(data: object, replacer?: ((this: any, key: string, value: any) => any) | undefined, space?: string | number | undefined): void {
+	json(data: any, replacer?: ((this: any, key: string, value: any) => any) | undefined, space?: string | number | undefined): void {
 		this.type('application/json')
 		this.send(Buffer.from(JSON.stringify(data, replacer, space)))
 	}
