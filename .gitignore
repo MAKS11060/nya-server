@@ -16,27 +16,12 @@ pids
 *.seed
 *.pid.lock
 
-# Coverage directory used by tools like istanbul
-coverage
-*.lcov
-
-# node-waf configuration
-.lock-wscript
-
-# Compiled binary addons (https://nodejs.org/api/addons.html)
-build/Release
-
 # Dependency directories
 node_modules/
 
-# TypeScript cache
-*.tsbuildinfo
-
-# Optional npm cache directory
-.npm
-
-# Optional eslint cache
-.eslintcache
+# Build output
+dist/
+types/
 
 # Optional REPL history
 .node_repl_history
@@ -44,24 +29,5 @@ node_modules/
 # Output of 'npm pack'
 *.tgz
 
-# Yarn Integrity file
-.yarn-integrity
-
-# dotenv environment variables file
-.env
-.env.test
-
-# Stores VSCode versions used for testing VSCode extensions
-.vscode-test
-
-### Example user template template
-### Example user template
-
 # IntelliJ project files
 .idea
-*.iml
-
-#
-dist
-types
-app
