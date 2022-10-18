@@ -1,15 +1,16 @@
 import {IncomingMessage, ServerResponse} from 'http'
 import {Http2ServerRequest, Http2ServerResponse, IncomingHttpHeaders, ServerHttp2Stream} from 'http2'
 import {RouteParams} from 'regexparam'
+import {App} from '../index.js'
 import {Context, ContextHTTP1, ContextHTTP2} from './Context.js'
 import {HTTPError} from './HTTPError.js'
-import {Route} from './route.js'
+import {Route} from './Route.js'
 import {HTTPMethod} from './types.js'
 
 export class Router {
 	readonly route: Route
 
-	constructor() {
+	constructor(readonly app: App) {
 		this.route = new Route()
 
 		Object.defineProperties(this, {
@@ -72,6 +73,11 @@ export class Router {
 				ctx.status(e.statusCode)
 				ctx.send(e.message)
 				return
+			}
+			if (this.app.config.log) {
+				if (this.app.config.log == 'error') {
+					console.error(e)
+				}
 			}
 			ctx.status(500).send('unknown error')
 		}
