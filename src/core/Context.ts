@@ -236,10 +236,6 @@ export class Context<M extends HTTPMethod, P extends RouteParams<string>> {
 	private readonly context: BaseContext<M>
 	private _holdStream: boolean = false
 
-	static getBaseContext(context: Context<any, any>) {
-		return context.context
-	}
-
 	constructor(baseContext: BaseContext<M>) {
 		this.context = baseContext
 		this.params = {} as P
@@ -304,6 +300,10 @@ export class Context<M extends HTTPMethod, P extends RouteParams<string>> {
 
 	get header(): Headers {
 		return this.context.header
+	}
+
+	static getBaseContext(context: Context<any, any>) {
+		return context.context
 	}
 
 	status(code: Status | number) {
