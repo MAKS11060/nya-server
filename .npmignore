@@ -1,4 +1,4 @@
-# IDEA files
+# IntelliJ project files
 .idea
 
 # Github
@@ -6,6 +6,7 @@
 
 # Source files
 src/
-app/
+examples/
+
 tsconfig.json
 pnpm-lock.yaml

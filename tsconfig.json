@@ -1,23 +1,20 @@
 {
   "compilerOptions": {
+    "outDir": "./dist",
     "module": "ESNext",
     "target": "ESNext",
-    "moduleResolution": "Node",
+    "moduleResolution": "NodeNext",
     "allowSyntheticDefaultImports": true,
     "removeComments": true,
     "noEmitOnError": true,
     "declaration": true,
     "declarationDir": "./types",
-    "outDir": "./dist",
+    "strict": true,
   },
   "files": [
     "./src/index.ts"
   ],
-  "include": [
-    "src/**/*"
-  ],
   "exclude": [
-    "node_modules",
-    "types/**"
+    "node_modules"
   ]
 }
