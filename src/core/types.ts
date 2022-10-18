@@ -4,23 +4,27 @@ import http2 from 'http2'
 import https from 'https'
 import {Context} from './Context.js'
 
+interface Config {
+	log?: 'none' | 'error'
+}
+
 interface SSL {
 	key?: PathLike
 	cert?: PathLike
 	ca?: PathLike
 }
 
-interface ConfigHTTP {
+interface ConfigHTTP extends Config {
 	http: 'http'
 	options?: http.ServerOptions
 }
 
-interface ConfigHTTPS extends SSL {
+interface ConfigHTTPS extends Config, SSL {
 	http: 'https'
 	options?: https.ServerOptions
 }
 
-interface ConfigH2 extends SSL {
+interface ConfigH2 extends Config, SSL {
 	http: 'h2'
 	options?: Omit<http2.SecureServerOptions, 'settings'>
 	settings?: http2.Settings
@@ -30,7 +34,6 @@ export type AppConfig = ConfigH2 | ConfigHTTP | ConfigHTTPS
 
 // HTTP Methods
 export type HTTPMethod = 'GET' | 'HEAD' | 'POST' | 'PUT' | 'DELETE' | 'CONNECT' | 'OPTIONS' | 'PATCH' | 'TRACE'
-
 
 // Media Types
 export enum ContentType {
