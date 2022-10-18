@@ -4,8 +4,8 @@ const {route} = new App({
 	// http: 'http'
 	// http: 'https',
 	http: 'h2', /*options: {allowHTTP1: true},*/ settings: {enableConnectProtocol: true},
-	cert: 'C:/Users/MAKS11060/.certs/maks11060.keenetic.link/cert.pem',
-	key: 'C:/Users/MAKS11060/.certs/maks11060.keenetic.link/privkey.pem',
+	cert: 'cert.pem',
+	key: 'privkey.pem',
 	log: 'error'
 })
 	.listen(40443)
