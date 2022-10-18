@@ -8,6 +8,7 @@ export class Body {
 	constructor(private readonly stream: Readable, readonly size: number, readonly type?: string) {
 	}
 
+	// Compare Content-Type and throw HTTPError
 	checkType(type: ContentType) {
 		if (undefined == this.type
 			|| this.type != type
@@ -30,16 +31,21 @@ export class Body {
 			.then(v => v ? v.toString(encoding) : null)
 	}
 
-	async json<T extends unknown>(size?: number) {
-		this.checkType(ContentType.json)
-		return this.text(size)
-			.then(val => val && JSON.parse(val) as T)
-	}
-
 	async urlencoded(size?: number) {
 		this.checkType(ContentType.urlencoded)
-		return this.text(size)
-			.then(val => val && qsParse(val))
+		return this.buffer(size)
+			.then(buf => buf && buf.toString())
+			.then(str => str && qsParse(str))
+	}
+
+	async json<T extends unknown>(size?: number) {
+		this.checkType(ContentType.json)
+		return this.buffer(size)
+			.then(buf => buf && buf.toString())
+			.then(val => val && JSON.parse(val) as T)
+			.catch(reason => {
+				throw new HTTPError('Bad Request', {error: 'Invalid JSON'})
+			})
 	}
 
 	// async formData(size?: number) {
