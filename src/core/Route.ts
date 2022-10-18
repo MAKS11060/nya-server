@@ -39,6 +39,7 @@ export class Route {
 	}
 
 	use(handler: MiddlewareHandler | Route | Promise<{ route: Route }> | Awaited<Promise<{ route: Route }>>) {
+		// console.log(handler instanceof Route)
 		if (handler instanceof Promise) {
 			handler.then(({route}) => {
 				this.use(route)
@@ -80,9 +81,10 @@ export class Route {
 			this.routes.push({path, method: method ? method : null, handler, params: parse(path)})
 		}
 
-		for (const methodElement of method as HTTPMethod[]) {
-			// @ts-ignore
-			this.routes.push({path, method: methodElement, handler, params: parse(path)})
+		if (Array.isArray(method)) {
+			for (const methodElement of method as M[]) {
+				this.route(path, methodElement, handler)
+			}
 		}
 
 		return this
