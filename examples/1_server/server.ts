@@ -6,8 +6,13 @@ const {route} = new App({
 	http: 'h2', /*options: {allowHTTP1: true},*/ settings: {enableConnectProtocol: true},
 	cert: 'C:/Users/MAKS11060/.certs/maks11060.keenetic.link/cert.pem',
 	key: 'C:/Users/MAKS11060/.certs/maks11060.keenetic.link/privkey.pem',
+	log: 'error'
 })
 	.listen(40443)
+
+route.use(ctx => {
+	console.log(ctx.method, ctx.pathname)
+})
 
 route.use(await import('./api.js'))
 route.use(await import('./proxy.js'))
