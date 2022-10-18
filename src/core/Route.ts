@@ -38,8 +38,26 @@ export class Route {
 			}))
 	}
 
+	use(handler: MiddlewareHandler): void
+	use(handler: Route | Promise<{ route: Route }> | Awaited<Promise<{ route: Route }>>): void
 	use(handler: MiddlewareHandler | Route | Promise<{ route: Route }> | Awaited<Promise<{ route: Route }>>) {
-		// console.log(handler instanceof Route)
+		// Middleware
+		if (typeof handler == 'function') {
+			this.middleware.push(handler)
+			return
+		}
+
+		// Route
+		if (handler instanceof Route) {
+			const router: Route = handler
+			if (!router.routers.includes(this)) router.routers.push(this)
+
+			// copy from Connected router
+			this.middleware.push(...router.middleware.filter(value => !this.middleware.includes(value)))
+			this.routes.push(...router.routes.filter(value => !this.routes.includes(value)))
+		}
+
+		// Module // import()
 		if (handler instanceof Promise) {
 			handler.then(({route}) => {
 				this.use(route)
@@ -56,21 +74,6 @@ export class Route {
 		for (const linkedRouter of this.routers) {
 			linkedRouter.use(handler)
 		}
-
-		// Route
-		if (handler instanceof Route) {
-			const router: Route = handler
-			if (!router.routers.includes(this)) router.routers.push(this)
-
-			// copy from Connected router
-			this.middleware.push(...router.middleware.filter(value => !this.middleware.includes(value)))
-			this.routes.push(...router.routes.filter(value => !this.routes.includes(value)))
-
-			return this
-		}
-
-		// Middleware
-		if (typeof handler == 'function') this.middleware.push(handler)
 
 		return this
 	}
