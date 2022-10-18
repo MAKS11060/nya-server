@@ -10,10 +10,6 @@ export interface WebSocketOption {
 	validateWebSocket?: boolean
 }
 
-class WebSocketClient {
-
-}
-
 export class WebSocketH2 {
 	readonly connects: Set<WS.WebSocket> = new Set()
 
@@ -66,4 +62,3 @@ export class WebSocketH2 {
 		}
 	}
 }
-
