@@ -16,7 +16,7 @@ export class App {
 	private server: http2.Http2SecureServer | http.Server | https.Server | undefined
 
 	constructor(readonly config: AppConfig) {
-		this.router = new Router()
+		this.router = new Router(this)
 
 		if (config.http == 'h2') {
 			this.server = http2.createSecureServer({
@@ -49,6 +49,10 @@ export class App {
 				ca: config.ca && readFileSync(config.ca) || config.options?.ca,
 			})
 			this.server.on('request', this.router.request)
+		}
+		
+		if (undefined == config.log) {
+			config.log = 'error'
 		}
 	}
 
