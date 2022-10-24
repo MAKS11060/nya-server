@@ -27,7 +27,7 @@ export interface BaseContext<M extends HTTPMethod> {
 
 	status(code: number): void
 
-	respond(headers?: Headers): void
+	respond(headers?: http.OutgoingHttpHeaders): void
 
 	send(data: Buffer, isHoldStream?: boolean): void
 }
@@ -95,11 +95,11 @@ export class ContextHTTP1<M extends HTTPMethod, P extends RouteParams<string>> i
 		this.statusCode = code
 	}
 
-	respond(headers?: Headers): void {
+	respond(headers?: http.OutgoingHttpHeaders): void {
 		if (this.isRespond) return
 		this.res.writeHead(this.statusCode, {
 			...Object.fromEntries(this.header.entries()),
-			...(headers && Object.fromEntries(headers.entries())),
+			...headers,
 		})
 	}
 
@@ -193,12 +193,12 @@ export class ContextHTTP2<M extends HTTPMethod, P extends RouteParams<string>> i
 		this.statusCode = code
 	}
 
-	respond(headers?: Headers): void {
+	respond(headers?: http.OutgoingHttpHeaders): void {
 		if (this.isRespond) return
 		this.stream.respond({
 			':status': this.statusCode,
 			...Object.fromEntries(this.header.entries()),
-			...(headers && Object.fromEntries(headers.entries())),
+			...headers,
 		})
 	}
 
@@ -346,7 +346,7 @@ export class Context<M extends HTTPMethod, P extends RouteParams<string>> {
 	}
 
 	respond() {
-		if (this.cookie.size) this.header.set('set-cookie', this.cookie.toString())
+		if (this.cookie.size) this.context.respond({'set-cookie': this.cookie.toArray()})
 		return this
 	}
 

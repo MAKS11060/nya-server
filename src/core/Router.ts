@@ -1,5 +1,5 @@
 import {IncomingMessage, ServerResponse} from 'http'
-import {Http2ServerRequest, Http2ServerResponse, IncomingHttpHeaders, ServerHttp2Stream} from 'http2'
+import {IncomingHttpHeaders, ServerHttp2Stream} from 'http2'
 import {RouteParams} from 'regexparam'
 import {App} from '../index.js'
 import {Context, ContextHTTP1, ContextHTTP2} from './Context.js'
@@ -19,9 +19,8 @@ export class Router {
 		})
 	}
 
-	async request(req: IncomingMessage | Http2ServerRequest, res: ServerResponse | Http2ServerResponse) {
+	async request(req: IncomingMessage, res: ServerResponse) {
 		try {
-			if (req instanceof Http2ServerRequest || res instanceof Http2ServerResponse) return
 			const contextHTTP1 = new ContextHTTP1(req, res)
 			const context = new Context(contextHTTP1)
 

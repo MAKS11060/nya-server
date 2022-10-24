@@ -26,7 +26,7 @@ interface ConfigHTTPS extends Config, SSL {
 
 interface ConfigH2 extends Config, SSL {
 	http: 'h2'
-	options?: Omit<http2.SecureServerOptions, 'settings'>
+	options?: Omit<http2.SecureServerOptions, 'settings' | 'allowHTTP1'>
 	settings?: http2.Settings
 }
 

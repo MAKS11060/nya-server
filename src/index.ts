@@ -27,9 +27,6 @@ export class App {
 				ca: config.ca && readFileSync(config.ca) || config.options?.ca,
 			})
 			this.server.on('stream', this.router.http2Stream)
-			// worked if options.allowHTTP1 is true
-			// FIXME: if active request handler websocket over h2 not working
-			// this.server.on('request', this.router.request)
 			this.server.on('unknownProtocol', socket => {
 				// if connected not ALPN h2
 				if (!socket.alpnProtocol) socket.destroy()

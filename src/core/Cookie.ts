@@ -26,7 +26,6 @@ export class Cookie {
 
 	static Init(): Cookie {
 		if (!cookieStorage.getStore()) cookieStorage.enterWith(new Cookie())
-		// if (cookieStorage.getStore())
 		return cookieStorage.getStore() as Cookie
 	}
 
@@ -75,10 +74,6 @@ export class Cookie {
 
 	toArray(): string[] {
 		return [...this.store.values()]
-	}
-
-	toString(): string {
-		return this.toArray().join()
 	}
 }
 
