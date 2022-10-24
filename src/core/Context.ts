@@ -235,6 +235,7 @@ export class Context<M extends HTTPMethod, P extends RouteParams<string>> {
 
 	private readonly context: BaseContext<M>
 	private _holdStream: boolean = false
+	private _cookie: Cookie = new Cookie()
 
 	constructor(baseContext: BaseContext<M>) {
 		this.context = baseContext
@@ -278,12 +279,12 @@ export class Context<M extends HTTPMethod, P extends RouteParams<string>> {
 	}
 
 	get cookies() {
-		// return Cookie.Parse(this.headers)
 		return Cookie.Parse(this.headers)
 	}
 
 	get cookie() {
-		return Cookie.Init()
+		console.log('get cookie', this._cookie)
+		return this._cookie
 	}
 
 	get body(): Body {

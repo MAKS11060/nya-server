@@ -1,8 +1,6 @@
-import {AsyncLocalStorage} from 'node:async_hooks'
-
 const pairSplitRegExp = /; */
-const cookieMapStorage = new AsyncLocalStorage<CookieMap>()
-const cookieStorage = new AsyncLocalStorage<Cookie>()
+
+const cookieMapStorage = new WeakMap<any, CookieMap>()
 
 interface CookieOptions {
 	domain?: string
@@ -24,11 +22,6 @@ export class Cookie {
 		return this.store.size
 	}
 
-	static Init(): Cookie {
-		if (!cookieStorage.getStore()) cookieStorage.enterWith(new Cookie())
-		return cookieStorage.getStore() as Cookie
-	}
-
 	static createCookie(key: string, value: string, options: CookieOptions) {
 		return `${key}=${value}`
 			+ (options.domain && `; domain=${options.domain}` || '')
@@ -42,14 +35,9 @@ export class Cookie {
 			+ (options.secure && '; secure' || '')
 	}
 
-	static Parse(header: { cookie?: string }): CookieMap {
-		if (!cookieMapStorage.getStore()) cookieMapStorage.enterWith(new CookieMap(header.cookie))
-		// if (cookieMapStorage.getStore())
-		return cookieMapStorage.getStore() as CookieMap
-		// if (cookieMapStorage.getStore()) return cookieMapStorage.getStore()
-		// const cookie = new CookieMap(header.cookie)
-		// cookieMapStorage.enterWith(cookie)
-		// return cookie
+	static Parse(headers: { cookie?: string }): CookieMap {
+		if (!cookieMapStorage.has(headers)) cookieMapStorage.set(headers, new CookieMap(headers.cookie))
+		return cookieMapStorage.get(headers) as CookieMap
 	}
 
 	set(name: string, value: string, options: CookieOptions): void {
