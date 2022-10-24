@@ -283,7 +283,6 @@ export class Context<M extends HTTPMethod, P extends RouteParams<string>> {
 	}
 
 	get cookie() {
-		console.log('get cookie', this._cookie)
 		return this._cookie
 	}
 
