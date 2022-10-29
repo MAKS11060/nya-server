@@ -267,7 +267,7 @@ export class Context<M extends HTTPMethod, P extends RouteParams<string>> {
 	}
 
 	get method(): M {
-		return this.context.method
+		return this.context.method.toUpperCase() as M
 	}
 
 	get uri(): URL {
