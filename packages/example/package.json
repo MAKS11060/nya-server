@@ -1,0 +1,17 @@
+{
+  "name": "example",
+  "type": "module",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "nodemon ts-node-esm src/index.ts",
+    "vite": "vite"
+  },
+  "dependencies": {
+    "@maks11060/nya-server": "workspace:*"
+  },
+  "devDependencies": {
+    "@maks11060/vite-plugin-node-hmr": "^1.0.2",
+    "vite": "^4.0.3"
+  }
+}
