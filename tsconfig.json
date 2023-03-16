@@ -1,15 +1,16 @@
 {
   "compilerOptions": {
     "outDir": "./dist",
+    "declarationDir": "./dist",
     "module": "ESNext",
     "target": "ESNext",
     "moduleResolution": "NodeNext",
     "allowSyntheticDefaultImports": true,
-    "removeComments": true,
     "noEmitOnError": true,
     "declaration": true,
-    "declarationDir": "./types",
     "strict": true,
+    "strictNullChecks": false,
+    "experimentalDecorators": true,
   },
   "files": [
     "./src/index.ts"
