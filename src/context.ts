@@ -203,7 +203,7 @@ export class Context {
    */
   json(data?: any, init?: JsonInit) {
     this.type('application/json')
-    return this.respond(JSON.stringify(data, init.replacer, init.space), init)
+    return this.respond(JSON.stringify(data, init?.replacer, init?.space), init)
   }
 
   /**
