@@ -55,6 +55,7 @@ export class Router {
       return
     }
 
+    // merge Router
     for (const [method, routes] of router.#routes) {
       for (let [pattern, route] of routes) {
         this.route(method, pattern, route)
@@ -73,14 +74,6 @@ export class Router {
       use(handle)
       this.use(handle)
     }
-
-    // merge Router
-    for (const [method, routes] of router.#routes) {
-      for (let [pattern, route] of routes) {
-        this.route(method, pattern, route)
-      }
-    }
-    for (const handle of router.#middleware) this.use(handle)
   }
 
   /**
