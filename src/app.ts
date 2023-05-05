@@ -1,23 +1,19 @@
 import {Body} from './body.js'
 import {Context} from './context.js'
-import {Router} from './router.js'
+import {HttpError} from './httpError.js'
+import {headersToObject, objectToHeaders} from './lib/utils.js'
+import {Router} from './router/router.js'
 import {Server} from './server.js'
-import {acceptEncoding, compress, CompressConfig, headersToObject, objectToHeaders} from './utils.js'
 
-interface AppInit {
-  compress?: CompressConfig
+interface AppOptions {
+  router?: Router
 }
-
-const COMPRESS_MIN_SIZE = 50
 
 export class App {
   readonly router: Router
-  readonly compress: CompressConfig
 
-  constructor(init?: AppInit) {
-    this.router = new Router()
-
-    if (init?.compress) this.compress = init.compress
+  constructor(options: AppOptions = {}) {
+    this.router = options.router ?? new Router()
   }
 
   async listen(...args: Parameters<typeof Server.listen>) {
@@ -119,26 +115,41 @@ export class App {
   }
 
   async #handle(ctx: Context): Promise<ReturnType<typeof Context.Response>> {
-    await Router.Handle(this.router, ctx)
+    await Router.Exec(this.router, ctx).catch(reason => {
+      if (reason instanceof HttpError) {
+        ctx.json({
+          error: {
+            status: reason.status,
+            message: reason.expose ? reason.message : 'Server Error',
+          },
+        }, {
+          status: reason.status,
+          headers: reason.headers,
+        })
+      }
+
+      throw reason
+    })
 
     const response = Context.Response(ctx)
 
     // compress response
-    if (this.compress?.enabled || response.compress) {
+    /*if (response.compress) {
       let skip = response.body.byteLength < COMPRESS_MIN_SIZE
         || ctx.header.has('content-encoding')
         || ctx.header.has('content-range')
 
-      if (!skip) {
-        const alg = acceptEncoding(ctx.headers, this.compress?.accept ?? ['br', 'gzip', 'identity'])
-        response.body = await compress(response.body, {...this.compress, alg})
+      const alg = acceptEncoding(ctx.headers, this.compress?.accept ?? ['br', 'gzip', 'identity'])
+      if (!skip && alg === 'identity') {
+        // response.body = await
+        // response.body = await compressor()
         response.header.set('content-length', response.body.byteLength.toString())
         response.header.set('content-encoding', alg)
       }
-    }
+    }*/
 
     // remove body
-    if (ctx.method == 'HEAD') Context.Response(ctx).body = new Uint8Array()
+    if (ctx.method == 'HEAD') Context.Response(ctx).body = new Uint8Array(0)
 
     return response
   }
