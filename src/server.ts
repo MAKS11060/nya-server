@@ -2,7 +2,7 @@ import http from 'http'
 import http2 from 'http2'
 import https from 'https'
 import net from 'net'
-import {AsyncIterateEmitter} from './AsyncIterateEmitter.js'
+import {AsyncIterateEmitter} from './lib/asyncIterateEmitter.js'
 
 export class Server {
   static listen(options: net.ListenOptions, listener?: () => void) {
