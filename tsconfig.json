@@ -10,7 +10,7 @@
     "declaration": true,
     "strict": true,
     "strictNullChecks": false,
-    "experimentalDecorators": true,
+    "experimentalDecorators": true
   },
   "files": [
     "./src/index.ts"
