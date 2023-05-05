@@ -1,17 +1,15 @@
-import {HttpError} from '../../src/httpError.js'
-import {Router} from '../../src/index.js'
+import {Router} from '@maks11060/nya-server'
 
-export const router = new Router()
+export const router = new Router({prefix: '/api'})
 
 router.use((ctx, done) => {
   console.log(ctx.method, ctx.url.toString())
 })
 
-router.get('/api/get', ctx => {
-  return ctx.json()
-}, (reject, error) => {
+router.get('/get', ctx => {
+  return ctx.json({})
 })
 
+router.post({pathname: 'test'}, ctx => {
 
-
-
+})
