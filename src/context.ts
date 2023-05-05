@@ -1,6 +1,6 @@
 import {Body} from './body.js'
 import {Cookies, getCookies} from './cookie.js'
-import {copyHeaders, parseAccept} from './utils.js'
+import {copyHeaders, parseAccept} from './lib/utils.js'
 
 interface ContextInit {
   method: string
@@ -76,7 +76,7 @@ export class Context {
   #cookie: Record<string, string>
   #cookies: Cookies
 
-  #body: Uint8Array = new Uint8Array()
+  #body: Uint8Array = new Uint8Array(0)
   #status: number = 200
   #responded: boolean = false
   #compress: boolean = false
@@ -106,7 +106,7 @@ export class Context {
   /**
    * The urlPattern object is only available on the route
    *
-   * [URLPattern API]{@link https://developer.mozilla.org/en-US/docs/Web/API/URL_Pattern_API}
+   * {@link https://developer.mozilla.org/en-US/docs/Web/API/URL_Pattern_API URLPattern API}
    * */
   get urlPattern(): URLPatternResult {
     return this.#urlPattern
@@ -114,11 +114,10 @@ export class Context {
 
   /**
    * Uri params from `ctx.urlPattern.pathname.groups`
-   * ```
+   * @example
    * '/search/:query' => {query: 'text'}
-   * ```
    *
-   * [URLPattern API]{@link https://developer.mozilla.org/en-US/docs/Web/API/URL_Pattern_API}
+   * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/URL_Pattern_API URLPattern API}
    * */
   get params() {
     return this.urlPattern.pathname.groups
