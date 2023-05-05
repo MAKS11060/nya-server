@@ -1,8 +1,5 @@
-import {buffer} from 'node:stream/consumers'
-import {BrotliCompress, BrotliOptions, createBrotliCompress, createGzip, Gzip, ZlibOptions} from 'node:zlib'
-
-export const pathnameNormalize = (pathname: string): string => {
-  return `/${pathname.split('/').filter(v => !!v).join('/')}` ?? '/'
+export const pathnameNormalize = (...path: string[]): string => {
+  return `/${path.join('/').split('/').filter(v => v).join('/')}`
 }
 
 export const parseAccept = (accept: string) => {
@@ -59,39 +56,16 @@ export const copyHeaders = (dist: Headers, headers?: Headers) => {
   }
 }
 
-type CompressAlgorithm = 'br' | 'gzip' | 'identity'
 
 /**
  * Parse Accept-Encoding: `br, deflate, gzip;q=1.0`
  */
-export const acceptEncoding = (headers: Headers, algorithms?: CompressAlgorithm[]) => {
-  if (!headers.has('accept-encoding')) return
-  const ae = headers.get('accept-encoding').split(',').map(v => v.trim().split(';')[0])
-  for (const algorithm of algorithms) {
-    if (ae.includes(algorithm)) {
-      return algorithm as CompressAlgorithm
-    }
-  }
-}
-
-export interface CompressConfig {
-  enabled?: boolean
-  accept?: CompressAlgorithm[]
-  br?: BrotliOptions
-  gzip?: ZlibOptions
-}
-
-export interface CompressInit {
-  alg: CompressAlgorithm
-  br?: BrotliOptions
-  gzip?: ZlibOptions
-}
-
-export const compress = (data: Uint8Array, init: CompressInit) => {
-  let compressor: BrotliCompress | Gzip
-  if (init.alg == 'br') compressor = createBrotliCompress(init?.br)
-  if (init.alg == 'gzip') compressor = createGzip(init?.gzip)
-  if (init.alg == 'identity') return Buffer.from(data) // pass
-  compressor.end(Buffer.from(data)) // write
-  return buffer(compressor)
-}
+// export const acceptEncoding = (headers: Headers, algorithms?: CompressAlgorithm[]) => {
+//   if (!headers.has('accept-encoding')) return
+//   const ae = headers.get('accept-encoding').split(',').map(v => v.trim().split(';')[0])
+//   for (const algorithm of algorithms) {
+//     if (ae.includes(algorithm)) {
+//       return algorithm as CompressAlgorithm
+//     }
+//   }
+// }
