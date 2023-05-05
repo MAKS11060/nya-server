@@ -1,6 +1,5 @@
 /**
  * @example
- *
  * const server = http.createServer()
  * const iterateEmitter = new AsyncIterateEmitter<{ request: http.IncomingMessage, response: http.ServerResponse }>()
  *
