@@ -117,7 +117,7 @@ export class App {
   async #handle(ctx: Context): Promise<ReturnType<typeof Context.Response>> {
     await Router.Exec(this.router, ctx).catch(reason => {
       if (reason instanceof HttpError) {
-        ctx.json({
+        return ctx.json({
           error: {
             status: reason.status,
             message: reason.expose ? reason.message : 'Server Error',
@@ -127,6 +127,8 @@ export class App {
           headers: reason.headers,
         })
       }
+
+      ctx.respond(new Uint8Array(0), {status: 500})
 
       throw reason
     })
