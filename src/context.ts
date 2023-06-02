@@ -1,13 +1,5 @@
-import {Body} from './body.js'
 import {Cookies, getCookies} from './cookie.js'
 import {copyHeaders, parseAccept} from './lib/utils.js'
-
-interface ContextInit {
-  method: string
-  url: URL
-  headers: Headers
-  body: Body
-}
 
 type RespondBody = string | object | Uint8Array | ArrayBuffer
 
@@ -24,7 +16,6 @@ interface RespondInit {
    * - 500 Server Error
    */
   status?: number
-  compress?: boolean
 }
 
 interface AcceptInit {
@@ -69,27 +60,33 @@ export class Context {
   readonly method: string
   readonly url: URL
   readonly headers: Headers
-  readonly body: Body
-
+  // readonly body: Body
   header: Headers = new Headers()
-  #urlPattern: URLPatternResult
-  #cookie: Record<string, string>
-  #cookies: Cookies
 
+  readonly #request: Request
+  #response: Response
+
+  #cookies: Cookies
+  #cookie: Record<string, string>
   #body: Uint8Array = new Uint8Array(0)
   #status: number = 200
   #responded: boolean = false
-  #compress: boolean = false
+  #urlPattern: URLPatternResult
 
-  constructor(options: ContextInit) {
-    this.url = options.url
-    this.body = options.body
-    this.headers = options.headers
-    this.method = options.method
+  constructor(request: Request) {
+    this.#request = request
+    this.headers = request.headers
+    this.method = request.method
+    this.url = new URL(request.url)
+    // this.body = request.method
+  }
 
-    if (this.pathname != this.pathname.replace(/\/+$/, '')) {
-      this.redirect(this.pathname.replace(/\/+$/, ''))
-    }
+  get request(): Request {
+    return this.#request
+  }
+
+  get response(): Response {
+    return this.#response
   }
 
   get pathname(): string {
@@ -104,15 +101,6 @@ export class Context {
   }
 
   /**
-   * The urlPattern object is only available on the route
-   *
-   * {@link https://developer.mozilla.org/en-US/docs/Web/API/URL_Pattern_API URLPattern API}
-   * */
-  get urlPattern(): URLPatternResult {
-    return this.#urlPattern
-  }
-
-  /**
    * Uri params from `ctx.urlPattern.pathname.groups`
    * @example
    * '/search/:query' => {query: 'text'}
@@ -121,6 +109,15 @@ export class Context {
    * */
   get params() {
     return this.urlPattern.pathname.groups
+  }
+
+  /**
+   * The urlPattern object is only available on the route
+   *
+   * {@link https://developer.mozilla.org/en-US/docs/Web/API/URL_Pattern_API URLPattern API}
+   * */
+  get urlPattern(): URLPatternResult {
+    return this.#urlPattern
   }
 
   /**
@@ -164,16 +161,26 @@ export class Context {
    * Get respond data
    */
   static Response(ctx: Context) {
-    return {
-      body: ctx.#body,
-      status: ctx.#status,
-      header: ctx.header,
-      compress: ctx.#compress,
-    }
+    if (ctx.#response) return ctx.#response
+
+    return new Response(ctx.#body, {
+      status: ctx.status,
+      headers: ctx.header,
+    })
   }
 
   static SetUrlPatternResult(ctx: Context, urlPattern: URLPatternResult) {
     ctx.#urlPattern = urlPattern
+  }
+
+  /**
+   * Write response to client
+   *
+   * @example
+   * ctx.respondWith(new Response('data'))
+   * */
+  respondWith(response: Response) {
+    this.#response = response
   }
 
   /**
@@ -190,11 +197,10 @@ export class Context {
 
     if (init?.headers) copyHeaders(this.header, new Headers(init?.headers))
     if (init?.status) this.#status = init.status
-    if (init?.compress) this.#compress = init.compress
 
     this.header.set('content-length', this.#body.byteLength.toString())
 
-    return this
+    return
   }
 
   /**
@@ -227,7 +233,6 @@ export class Context {
     if (uri) this.header.set('location', uri.toString())
     return this.respond('', {status})
   }
-
   accept(init: AcceptInit) {
     if (!this.header.get('accept')) this.respond('', {status: 406})
     const accept = parseAccept(this.header.get('accept'))

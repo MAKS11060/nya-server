@@ -26,7 +26,8 @@ export const objectToHeaders = (obj: Record<string, string | string[]>) => {
 /**
  * Headers to http.OutgoingHttpHeader
  */
-export const headersToObject = (headers: Headers) => {
+export const headersToObject = (headers?: Headers) => {
+  if (!headers) return {}
   let setCookie: string[]
   let header: Record<string, string | string[] | number> = {}
   for (const [key, val] of headers) {

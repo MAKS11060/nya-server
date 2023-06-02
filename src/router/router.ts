@@ -1,10 +1,11 @@
+import 'urlpattern-polyfill'
 import {Context} from '../context.js'
 import {HttpMethod} from '../httpMethod.js'
 import {pathnameNormalize} from '../lib/utils.js'
 
 export type RouteHandle = (ctx: Context) => any
 
-export type MiddlewareHandle = (ctx: Context, done?: () => Promise<any>) => any
+export type MiddlewareHandle = (ctx: Context, done?: () => Promise<void>) => void
 
 interface RoutesHandler {
   pattern: URLPattern
@@ -26,8 +27,8 @@ export class Router {
   static async Exec(router: Router, ctx: Context) {
     // handle middleware
     let promiseStack: Function[] = []
-    for (let handle of router.middleware()) {
-      await handle(ctx, () => new Promise(resolve => promiseStack.push(resolve)))
+    for (const handle of router.middleware()) {
+      handle(ctx, () => new Promise(resolve => promiseStack.push(resolve)))
     }
 
     // handle routes
@@ -40,9 +41,10 @@ export class Router {
     // middleware resolved
     // for (let resolve of promiseStack.reverse()) resolve()
     while (promiseStack.length > 0) {
-      console.log('up')
-      promiseStack.pop()()
+      await promiseStack.pop()()
     }
+
+    return Context.Response(ctx)
   }
 
   setRouter(router: Router) {
@@ -205,31 +207,3 @@ export class Router {
     }
   }
 }
-
-
-/*
-const router = new Router()
-router.add('GET', '/api', ctx => {
-})
-router.add('GET', {pathname: '/api/:id'}, ctx => {
-})
-router.add('GET', {pathname: '/!*'}, function test(ctx) {
-})
-
-const router2 = new Router()
-router2.get('/users/!*', ctx => {
-})
-router2.get({pathname: '/!*'}, function test2(ctx) {
-})
-router.setRouter(router2)
-
-const router3 = new Router({prefix: ''})
-router.setRouter(router3)
-router3.post('/:path(\\d+)', ctx => {
-})
-
-
-for (const match of router.match('GET', new URL('http://localhost/'))) {
-  console.log(match.pattern.pathname, match.handle)
-}
-*/
