@@ -9,7 +9,3 @@ router.use((ctx, done) => {
 router.get('/get', ctx => {
   return ctx.json({})
 })
-
-router.post({pathname: 'test'}, ctx => {
-
-})

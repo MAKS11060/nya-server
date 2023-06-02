@@ -3,7 +3,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "start": "ts-node-esm src/index.ts",
+    "start": "node --loader=ts-node/esm src/index.ts",
     "dev": "nodemon -e ts,json"
   },
   "devDependencies": {
