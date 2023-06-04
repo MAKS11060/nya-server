@@ -1,7 +1,6 @@
 import {Context} from './context.js'
 import {HttpError} from './httpError.js'
 import {Router} from './router/router.js'
-import {Server} from './server.js'
 
 interface AppOptions {
   router?: Router
@@ -54,14 +53,3 @@ export class App {
     }
   }
 }
-
-const app = new App()
-Server.listen(app.fetch, {transport: 'http', port: 50000})
-
-app.router.get('/', ctx => {
-  throw new Error('erer')
-  // throw new HttpError('Forbidden', {cause: '123'})
-  // ctx.text('123')
-})
-
-console.log(new Response().type)
