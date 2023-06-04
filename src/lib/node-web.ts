@@ -57,6 +57,8 @@ export const h2streamToWeb = (stream: http2.ServerHttp2Stream, headersRaw: http2
 }
 
 export const respondWith = async (res: http.ServerResponse, response: Response) => {
+  if (!response) throw new Error('Respond not provided')
+
   if (response.body) {
     try {
       if (isStream(response)) {
@@ -82,6 +84,8 @@ export const respondWith = async (res: http.ServerResponse, response: Response) 
 }
 
 export const h2respondWith = async (stream: http2.ServerHttp2Stream, response: Response) => {
+  if (!response) throw new Error('Respond not provided')
+
   if (response.body) {
     try {
       if (isStream(response)) {
