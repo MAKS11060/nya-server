@@ -6,10 +6,10 @@ name: Publish Package
 on:
   workflow_dispatch:
 
-  push:
-    branches: [main]
-    paths:
-      - 'package.json'
+#  push:
+#    branches: [main]
+#    paths:
+#      - 'package.json'
 
 jobs:
   publish-gpr:
