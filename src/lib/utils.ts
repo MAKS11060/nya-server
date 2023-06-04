@@ -15,33 +15,6 @@ export const parseAccept = (accept: string) => {
 }
 
 /**
- * IncomingHeaders to Headers
- */
-export const objectToHeaders = (obj: Record<string, string | string[]>) => {
-  const headers = new Headers()
-  for (const key in obj) headers.set(key, `${obj[key]}`)
-  return headers
-}
-
-/**
- * Headers to http.OutgoingHttpHeader
- */
-export const headersToObject = (headers?: Headers) => {
-  if (!headers) return {}
-  let setCookie: string[]
-  let header: Record<string, string | string[] | number> = {}
-  for (const [key, val] of headers) {
-    if (key === 'set-cookie') {
-      if (!setCookie) header[key] = setCookie = []
-      setCookie.push(val)
-      continue
-    }
-    header[key] = val
-  }
-  return header
-}
-
-/**
  * Copy Headers to Dist
  */
 export const copyHeaders = (dist: Headers, headers?: Headers) => {
