@@ -42,6 +42,13 @@ type ServerType<T = ServerListenOptions> =
           : never
 
 export class Server {
+  /**
+   * @example
+   * const app = new App()
+   * Server.listen(app.fetch, {transport: 'http', port: 50000})
+   * // or
+   * Server.listen(request => new Response('321'), {transport: 'http', port: 50000})
+   * */
   static listen<T extends ServerListenOptions>(handle: (request: Request) => Response | Promise<Response>, options: T, listener?: () => void): ServerType<T> {
     // default http server
     if (!options.transport) options.transport = 'http'
