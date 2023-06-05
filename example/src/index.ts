@@ -1,7 +1,8 @@
-import {App} from '@maks11060/nya-server'
+import {App} from 'nya-server'
+import {Server} from 'nya-server/server'
 
-const app = App.listen({port: 50000})
-// const app = App.listen({transport: 'h2c', port: 50001})
+const app = new App()
+Server.listen(app.fetch, {transport: 'h2c', port: 50001})
 const router = app.router
 
 // performance
