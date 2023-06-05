@@ -22,10 +22,6 @@ importers:
         version: 5.1.3
 
   example:
-    dependencies:
-      '@maks11060/nya-server':
-        specifier: workspace:*
-        version: link:..
     devDependencies:
       '@types/node':
         specifier: ^18.16.3

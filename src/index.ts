@@ -1,5 +1,4 @@
 export {App} from './app.js'
-export {Server} from './server.js'
 export {Router} from './router/router.js'
 export {HttpError} from './httpError.js'
 
