@@ -42,14 +42,14 @@ export const requestToWeb = (req: http.IncomingMessage): Request => {
 }
 
 export const h2streamToWeb = (stream: http2.ServerHttp2Stream, headersRaw: http2.IncomingHttpHeaders): Request => {
-  const url = new URL(headersRaw[':path'], `${headersRaw[':scheme']}://${headersRaw[':authority']}`)
+  const url = new URL(headersRaw[':path'], `${headersRaw[':scheme']}://${headersRaw[':authority'] || headersRaw['host']}`)
   const init: RequestInit & { duplex?: 'half' } = {
     method: headersRaw[':method'],
     headers: headersRaw as HeadersInit,
   }
 
   if (!(init.method === 'GET' || init.method === 'HEAD')) {
-    init.body = Readable.toWeb(stream) as ReadableStream<Uint8Array>
+    init.body = Readable.toWeb(Readable.from(stream)) as ReadableStream<Uint8Array>
     init.duplex = 'half'
   }
 
