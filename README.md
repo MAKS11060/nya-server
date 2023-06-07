@@ -5,11 +5,11 @@
 ## Installing
 
 ```bash
-npm install @maks11060/nya-server
+npm install nya-server
 ```
 
 ```bash
-pnpm add @maks11060/nya-server
+pnpm add nya-server
 ```
 
 ---
