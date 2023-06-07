@@ -1,9 +1,9 @@
 {
   "name": "nya-server",
-  "version": "0.10.9",
+  "version": "0.10.10",
   "type": "module",
   "license": "MIT",
-  "author": "maks11060 <maks11060@gmail.com>",
+  "author": "maks11060",
   "description": "",
   "keywords": [
     "backend",
