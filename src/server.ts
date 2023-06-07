@@ -41,6 +41,8 @@ type ServerType<T = ServerListenOptions> =
           ? http2.Http2Server
           : never
 
+type ServerHandle = (request: Request) => Response | Promise<Response>
+
 export class Server {
   /**
    * @example
@@ -49,7 +51,7 @@ export class Server {
    * // or
    * Server.listen(request => new Response('321'), {transport: 'http', port: 50000})
    * */
-  static listen<T extends ServerListenOptions>(handle: (request: Request) => Response | Promise<Response>, options: T, listener?: () => void): ServerType<T> {
+  static listen<T extends ServerListenOptions>(handle: ServerHandle, options: T, listener?: () => void): ServerType<T> {
     // default http server
     if (!options.transport) options.transport = 'http'
 
@@ -58,7 +60,9 @@ export class Server {
       server.listen(options, listener)
       server.on('request', async (req, res) => {
         const request = requestToWeb(req)
-        respondWith(res, await handle(request))
+        respondWith(res, await handle(request)).catch(reason => {
+          console.error(reason)
+        })
       })
       return server as any
     }
@@ -68,7 +72,9 @@ export class Server {
       server.listen(options, listener)
       server.on('request', async (req, res) => {
         const request = requestToWeb(req)
-        respondWith(res, await handle(request))
+        respondWith(res, await handle(request)).catch(reason => {
+          console.error(reason)
+        })
       })
       return server as any
     }
@@ -78,7 +84,9 @@ export class Server {
       server.listen(options, listener)
       server.on('stream', async (stream, headers) => {
         const request = h2streamToWeb(stream, headers)
-        h2respondWith(stream, await handle(request))
+        h2respondWith(stream, await handle(request)).catch(reason => {
+          console.error(reason)
+        })
       })
       return server as any
     }
@@ -88,7 +96,9 @@ export class Server {
       server.listen(options, listener)
       server.on('stream', async (stream, headers) => {
         const request = h2streamToWeb(stream, headers)
-        h2respondWith(stream, await handle(request))
+        h2respondWith(stream, await handle(request)).catch(reason => {
+          console.error(reason)
+        })
       })
       return server as any
     }
