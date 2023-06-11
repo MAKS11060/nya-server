@@ -1,4 +1,4 @@
-import {ErrorStatus, isClientErrorStatus, Status} from './httpStatus.js'
+import {ErrorStatus, isClientErrorStatus, isErrorStatus, Status} from './httpStatus.js'
 
 const ERROR_STATUS_MAP = {
   'BadRequest': 400,
@@ -44,27 +44,40 @@ const ERROR_STATUS_MAP = {
 
 export type ErrorStatusKeys = keyof typeof ERROR_STATUS_MAP;
 
+export type HttpErrorInit = ErrorStatusKeys | string
+
 export interface HttpErrorOptions extends ErrorOptions {
-  expose?: boolean;
-  headers?: HeadersInit;
+  expose?: boolean
+  headers?: HeadersInit
+  status?: number
+  description?: string
 }
 
 export class HttpError extends Error {
   #status: ErrorStatus = Status.InternalServerError
   #expose: boolean
   #headers?: Headers
+  #description?: string
 
-  // constructor(message = 'Http Error', options?: HttpErrorOptions) {
-  constructor(message: ErrorStatusKeys = 'InternalServerError', options?: HttpErrorOptions) {
+  constructor(message: HttpErrorInit = 'InternalServerError', options?: HttpErrorOptions) {
     super(message, options)
 
-    if (ERROR_STATUS_MAP[message]) {
-      this.#status = ERROR_STATUS_MAP[message]
+    if (options) {
+      if (options.status) {
+        this.#status = options.status
+      }
+
+      this.#description = options?.description
+    }
+
+    if (ERROR_STATUS_MAP[message as ErrorStatusKeys]) {
+      this.#status = ERROR_STATUS_MAP[message as ErrorStatusKeys]
     }
 
     this.#expose = options?.expose === undefined
       ? isClientErrorStatus(this.status)
       : options.expose
+
     if (options?.headers) {
       this.#headers = new Headers(options.headers)
     }
@@ -86,6 +99,10 @@ export class HttpError extends Error {
   /** The error status that is set on the error. */
   get status(): ErrorStatus {
     return this.#status
+  }
+
+  get description() {
+    return this.#description
   }
 }
 

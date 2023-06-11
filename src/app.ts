@@ -39,6 +39,7 @@ export class App {
           error: {
             status: reason.status,
             message: reason.expose ? reason.message : 'Server Error',
+            description: reason?.description
           },
         }, {
           status: reason.status,
